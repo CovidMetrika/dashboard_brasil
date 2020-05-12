@@ -800,7 +800,7 @@ ui <- dashboardPage(
       menuItem("Fonte de Dados", icon = icon("file-download"), tabName = "dados", badgeColor = "teal"),
       menuItem("CovidMetrika", icon = icon("users"), tabName = "us", badgeColor = "teal"), 
       menuItem("Source Code", icon = icon("code"), badgeColor = "teal", 
-               href = 'https://github.com/franpallaoro/COVID-19/tree/master/Dashboard')
+               href = 'https://github.com/CovidMetrika/dashboard_brasil/tree/master')
     )
   ),
   
@@ -960,7 +960,7 @@ ui <- dashboardPage(
                 subtitle = "Estudante de Estatística da UFRGS",
                 type = 2,
                 width = 4,
-                src = 'https://github.com/franpallaoro/COVID-19/blob/ssjuliana/Dashboard/fotos/franciele.jpg?raw=true',
+                src = "franciele.jpg",
                 color = "light-blue",
                 footer = "Contato: franpallaoro@gmail.com"
               ),
@@ -970,7 +970,7 @@ ui <- dashboardPage(
                 subtitle = "Estudante de Estatística da UFRGS",
                 type = 2,
                 width = 4,
-                src = 'https://github.com/franpallaoro/COVID-19/blob/ssjuliana/Dashboard/fotos/gabriel.jpg?raw=true',
+                src = "gabriel.jpg",
                 color = "teal",
                 footer = "Contato: gabrielholmersaul@gmail.com"
               )
@@ -981,7 +981,7 @@ ui <- dashboardPage(
                 subtitle = "Estudante de Estatística da UFRGS",
                 type = 2,
                 width = 4,
-                src = 'https://github.com/franpallaoro/COVID-19/blob/ssjuliana/Dashboard/fotos/gustavo.png?raw=true',
+                src = "gustavo.png",
                 color = "light-blue",
                 footer = "Contato: gustavo.utpott@gmail.com"
               ),
@@ -991,7 +991,7 @@ ui <- dashboardPage(
                 subtitle = "Estudante de Pós-Graduação em Epidemiologia da UFRGS",
                 type = 2,
                 width = 4,
-                src =  'https://github.com/franpallaoro/COVID-19/blob/ssjuliana/Dashboard/fotos/juliana.jpeg?raw=true',
+                src =  "juliana.jpeg",
                 color = "teal",
                 footer = "Contato: julianass.estatistica@gmail.com"
               ),
@@ -1002,7 +1002,7 @@ ui <- dashboardPage(
                 subtitle = "Professora do departamento de Estatística da UFRGS",
                 type = 2,
                 width = 4,
-                src = 'https://github.com/franpallaoro/COVID-19/blob/ssjuliana/Dashboard/fotos/marcia.png?raw=true',
+                src = "marcia.png",
                 color = "light-blue",
                 footer =  "Contato: mhbarbian@gmail.com"
               ), 
@@ -1012,12 +1012,12 @@ ui <- dashboardPage(
                 subtitle = "Professor do departamento de Estatística da UFRGS",
                 type = 2,
                 width = 4,
-                src = 'https://github.com/franpallaoro/COVID-19/blob/ssjuliana/Dashboard/fotos/rodrigo.jpg?raw=true',
+                src = "rodrigo.jpg",
                 color = "teal",
                 footer =  "Contato: citton.padilha@ufrgs.br"
               ), 
               
-              tags$img(src = "https://github.com/franpallaoro/COVID-19/blob/ssjuliana/Dashboard/fotos/logos.png?raw=true", 
+              tags$img(src = "logos.png", 
                        height = "150", width = "1000")
               
               
