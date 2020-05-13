@@ -21,6 +21,7 @@ library(sf) #Esta sendo a melhor opcao entre o sp
 library(leaflet) #Talvez n usaremos
 library(RColorBrewer)
 library(DT)
+library(shinyEffects)
 
 ################
 
@@ -800,9 +801,7 @@ ui <- dashboardPage(
                badgeLabel = "UF", badgeColor = "teal"),
       menuItem("Total de Óbitos", icon = icon("chart-line"), tabName = "cart", badgeLabel = "BR", badgeColor = "teal"),
       menuItem("Fonte de Dados", icon = icon("file-download"), tabName = "dados", badgeColor = "teal"),
-      menuItem("CovidMetrika", icon = icon("users"), tabName = "us", badgeColor = "teal"), 
-      menuItem("Source Code", icon = icon("code"), badgeColor = "teal", 
-               href = 'https://github.com/CovidMetrika/dashboard_brasil/tree/master')
+      menuItem("CovidMetrika", icon = icon("users"), tabName = "us", badgeColor = "teal")
     )
   ),
   
@@ -961,82 +960,82 @@ ui <- dashboardPage(
       ), 
       tabItem("us",
               
-              widgetUserBox(
-                title = "www.ufrgs.br/covidmetrika",
-                type = 2,
-                width = 12,
-                color = "blue",
-                "Aplicativo desenvolvido pelo covidMetrika, grupo composto por 
-                  estudantes e professores do Departamento de Estatística e Programa de Pós-Graduação 
-                  em Epidemiologia da Universidade Federal do Rio Grande do Sul.",
-                footer_padding = F
-              ),
-              
-              widgetUserBox(
-                title = tags$b("Franciele Lobo Pallaoro"),
-                subtitle = "Estudante de Estatística da UFRGS",
-                type = 2,
-                width = 4,
-                src = "franciele.jpg",
-                color = "teal",
-                footer = "Contato: franpallaoro@gmail.com"
-              ),
-              
-              widgetUserBox(
-                title = tags$b("Gabriel Holmer Saul"),
-                subtitle = "Estudante de Estatística da UFRGS",
-                type = 2,
-                width = 4,
-                src = "gabriel.jpg",
-                color = "teal",
-                footer = "Contato: gabrielholmersaul@gmail.com"
+              fluidRow(
+                column(
+                  width = 6,
+                  valueBoxOutput("covidMetrika",width = 12)
+                ),
+                column(
+                  width = 6,
+                  valueBoxOutput("git_covidMetrika", width = 12)
+                ),
+                
+                widgetUserBox(
+                  title = tags$b("Franciele Lobo Pallaoro"),
+                  subtitle = "Estudante de Estatística da UFRGS",
+                  type = 2,
+                  width = 4,
+                  src = "franciele.jpg",
+                  color = "teal",
+                  footer = "Contato: franpallaoro@gmail.com"
+                ),
+                
+                widgetUserBox(
+                  title = tags$b("Gabriel Holmer Saul"),
+                  subtitle = "Estudante de Estatística da UFRGS",
+                  type = 2,
+                  width = 4,
+                  src = "gabriel.jpg",
+                  color = "teal",
+                  footer = "Contato: gabrielholmersaul@gmail.com"
+                )
+                ,
+                
+                widgetUserBox(
+                  title = tags$b("Gustavo Machado Utpott"),
+                  subtitle = "Estudante de Estatística da UFRGS",
+                  type = 2,
+                  width = 4,
+                  src = "gustavo.png",
+                  color = "teal",
+                  footer = "Contato: gustavo.utpott@gmail.com"
+                ),
+                
+                widgetUserBox(
+                  title = tags$b("Juliana Sena de Souza"),
+                  subtitle = "Estudante de Pós-Graduação em Epidemiologia da UFRGS",
+                  type = 2,
+                  width = 4,
+                  src =  "juliana.jpeg",
+                  color = "teal",
+                  footer = "Contato: julianass.estatistica@gmail.com"
+                ),
+                
+                
+                widgetUserBox(
+                  title = tags$b("Márcia Helena Barbian"),
+                  subtitle = "Professora do departamento de Estatística da UFRGS",
+                  type = 2,
+                  width = 4,
+                  src = "marcia.png",
+                  color = "teal",
+                  footer =  "Contato: mhbarbian@ufrgs.com"
+                ), 
+                
+                widgetUserBox(
+                  title = tags$b("Rodrigo Citton P. dos Reis"),
+                  subtitle = "Professor do departamento de Estatística da UFRGS",
+                  type = 2,
+                  width = 4,
+                  src = "rodrigo.jpg",
+                  color = "teal",
+                  footer =  "Contato: citton.padilha@ufrgs.br"
+                ), 
+                
+                tags$img(src = "logos.png", 
+                         height = "150", width = "1000")
+                
               )
-              ,
-              
-              widgetUserBox(
-                title = tags$b("Gustavo Machado Utpott"),
-                subtitle = "Estudante de Estatística da UFRGS",
-                type = 2,
-                width = 4,
-                src = "gustavo.png",
-                color = "teal",
-                footer = "Contato: gustavo.utpott@gmail.com"
-              ),
-              
-              widgetUserBox(
-                title = tags$b("Juliana Sena de Souza"),
-                subtitle = "Estudante de Pós-Graduação em Epidemiologia da UFRGS",
-                type = 2,
-                width = 4,
-                src =  "juliana.jpeg",
-                color = "teal",
-                footer = "Contato: julianass.estatistica@gmail.com"
-              ),
-              
-              
-              widgetUserBox(
-                title = tags$b("Márcia Helena Barbian"),
-                subtitle = "Professora do departamento de Estatística da UFRGS",
-                type = 2,
-                width = 4,
-                src = "marcia.png",
-                color = "teal",
-                footer =  "Contato: mhbarbian@ufrgs.com"
-              ), 
-              
-              widgetUserBox(
-                title = tags$b("Rodrigo Citton P. dos Reis"),
-                subtitle = "Professor do departamento de Estatística da UFRGS",
-                type = 2,
-                width = 4,
-                src = "rodrigo.jpg",
-                color = "teal",
-                footer =  "Contato: citton.padilha@ufrgs.br"
-              ), 
-              
-              tags$img(src = "logos.png", 
-                       height = "150", width = "1000")
-              
               
       ) 
       )
@@ -1231,7 +1230,34 @@ server <- function(input, output) {
     plot_cart(input$tab_cart)
   })
   #-------------------------------------
+  #-------------------------------------
   
+  # tabItem us
+  
+  
+  output$covidMetrika <- renderValueBox({
+    
+    valueBox("Site covidMetrika", 
+             subtitle = div("Aplicativo desenvolvido pelo grupo covidMetrika",br(),"Confira aqui nosso site para ver nossos outros projetos!"), 
+             icon = icon("external-link-alt"), 
+             color = "blue", 
+             width = 12,
+             href = "https://www.ufrgs.br/covidmetrika/"
+    )
+    
+  })
+  
+  output$git_covidMetrika <- renderValueBox({
+    
+    valueBox("Repositório covidMetrika", 
+             subtitle = div("Confira aqui nosso repositório no GitHub!",br(),"Contato: covidmetrika@gmail.com"), 
+             icon = icon("github"), 
+             color = "blue", 
+             width = 12,
+             href = "https://github.com/CovidMetrika/dashboard_brasil"
+    )
+    
+  })
   
 }
 
