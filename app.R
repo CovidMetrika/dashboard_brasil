@@ -962,12 +962,23 @@ ui <- dashboardPage(
       tabItem("us",
               
               widgetUserBox(
+                title = "www.ufrgs.br/covidmetrika",
+                type = 2,
+                width = 12,
+                color = "blue",
+                "Aplicativo desenvolvido pelo covidMetrika, grupo composto por 
+                  estudantes e professores do Departamento de Estatística e Programa de Pós-Graduação 
+                  em Epidemiologia da Universidade Federal do Rio Grande do Sul.",
+                footer_padding = F
+              ),
+              
+              widgetUserBox(
                 title = tags$b("Franciele Lobo Pallaoro"),
                 subtitle = "Estudante de Estatística da UFRGS",
                 type = 2,
                 width = 4,
                 src = "franciele.jpg",
-                color = "light-blue",
+                color = "teal",
                 footer = "Contato: franpallaoro@gmail.com"
               ),
               
@@ -988,7 +999,7 @@ ui <- dashboardPage(
                 type = 2,
                 width = 4,
                 src = "gustavo.png",
-                color = "light-blue",
+                color = "teal",
                 footer = "Contato: gustavo.utpott@gmail.com"
               ),
               
@@ -1009,8 +1020,8 @@ ui <- dashboardPage(
                 type = 2,
                 width = 4,
                 src = "marcia.png",
-                color = "light-blue",
-                footer =  "Contato: mhbarbian@gmail.com"
+                color = "teal",
+                footer =  "Contato: mhbarbian@ufrgs.com"
               ), 
               
               widgetUserBox(
