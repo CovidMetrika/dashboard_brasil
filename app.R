@@ -84,7 +84,7 @@ data_state <- covid %>%
 # banco de dados obitos cartorio:
 
 obitos_cartorio <- readRDS(here::here("dados",'obitos_br_uf.rds')) %>%
-  filter(date >= "2020-03-16") # filtrando a partir do primeiro caso
+  filter(date >= "2020-03-16" & date <= Sys.Date()) # filtrando a partir do primeiro caso
 
 names(obitos_cartorio) <- c("Estado","Data","Acumulado mortes COVID-19","Acumulado mortes indeterminadas 2019","Acumulado mortes indeterminadas 2020",
                             "Acumulado mortes outras 2019","Acumulado mortes outras 2020","Acumulado mortes Pneumonia 2019","Acumulado mortes Pneumonia 2020",
@@ -621,7 +621,7 @@ plot_cart <- function(input) {
   
   aux <- obitos_cartorio %>%
     group_by(!!var) %>%
-    summarise_at(names(obitos_cartorio)[c(3:17,20:34)],sum) %>%
+    summarise_at(names(obitos_cartorio)[c(3:17,20:34)],sum, na.rm = T) %>%
     pivot_longer(
       cols = -c(!!var),
       names_to = "disease_type",
@@ -1193,7 +1193,7 @@ server <- function(input, output) {
   
   output$box_pneumonia <- renderValueBox({
     valueBox(
-      value = sum(obitos_cartorio$`Mortes Pneumonia 2020`), 
+      value = sum(obitos_cartorio$`Mortes Pneumonia 2020`, na.rm = T), 
       subtitle = "Pneumonia (desde o 1º óbito Covid-19)", 
       icon = tags$i(class = "fa fa-lungs"),
       color = "navy"
@@ -1202,7 +1202,7 @@ server <- function(input, output) {
   
   output$box_falha <- renderValueBox({
     valueBox(
-      value = sum(obitos_cartorio$`Mortes por falha respiratória 2020`), 
+      value = sum(obitos_cartorio$`Mortes por falha respiratória 2020`, na.rm = T), 
       subtitle = "Falha Respiratória (desde o 1º óbito Covid-19)", 
       icon = tags$i(class = "fa fa-lungs"),
       color = "olive"
@@ -1211,7 +1211,7 @@ server <- function(input, output) {
   
   output$box_covid <- renderValueBox({
     valueBox(
-      value = sum(obitos_cartorio$`Mortes COVID-19`), 
+      value = sum(obitos_cartorio$`Mortes COVID-19`, na.rm = T), 
       subtitle = "Covid-19", 
       icon = tags$i(class = "fa fa-virus"),
       color = "lime"
