@@ -22,6 +22,7 @@ library(leaflet) #Talvez n usaremos
 library(RColorBrewer)
 library(DT)
 library(shinyEffects)
+library(scales)
 
 ################
 
@@ -164,8 +165,9 @@ plot_geral <- function(input){
       geom_bar(aes(x = Data, y = Diario), fill = col_sel, stat = 'identity') + 
       theme(axis.text.x = element_text(angle = 45, size = 8, vjust = 0.5)) + 
       labs(x = NULL, y = name_aux) + 
+      scale_y_continuous(labels = scales::comma) +
       theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-      theme(plot.background = element_rect(fill = "transparent", color = NA))
+      theme(plot.background = element_rect(fill = "transparent", color = NA)) 
     
     
     ggplotly(p) %>%
@@ -182,6 +184,10 @@ plot_geral <- function(input){
       theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
       theme(plot.background = element_rect(fill = "transparent", color = NA))
     
+    if(input == "Letalidade") {
+      p <- p +
+        scale_y_continuous(labels=percent)
+    }
     
     ggplotly(p) %>%
       layout(xaxis = list(tickmode = 'array', 
@@ -215,29 +221,60 @@ plot_mapa <- function(input){
   #selcor = fcolor[1]
   #pal <- colorBin("RdYlBu", domain =c(0, max(tidy$variavel), bins = 8), reverse= TRUE) ## cor da legenda
   
-  leaflet(tidy) %>%
-    addProviderTiles(providers$OpenStreetMap.Mapnik) %>%
-    addPolygons(fillColor = ~pal(variavel), 
-                weight = 1.5,
-                opacity = 0.7,
-                fillOpacity = 0.7,
-                color = "gray",
-                highlight = highlightOptions(
-                  weight = 5,
-                  color = "#666",
+  if(input != "Letalidade") {
+    
+    leaflet(tidy) %>%
+      addProviderTiles(providers$OpenStreetMap.Mapnik) %>%
+      addPolygons(fillColor = ~pal(variavel), 
+                  weight = 1.5,
+                  opacity = 0.7,
                   fillOpacity = 0.7,
-                  bringToFront = TRUE),
-                label = sprintf("%s - %s", tidy$NM_ESTADO, tidy$variavel),
-                labelOptions = labelOptions(
-                  style = list("font-weight" = "normal", padding = "6px 11px"),
-                  textsize = "15px",
-                  direction = "auto"))   %>%
-    addLegend(pal = pal, values = round(tidy$variavel,4), labFormat = function(type, cuts, p) {  # legenda para colorQuantile
-      n = length(cuts)
-      paste0(round(cuts[-n],2), " &ndash; ", round(cuts[-1],2))},
-      title = select_choices[which(input == select_choices)],
-      labels = ~tidy$NM_ESTADO,
-      position = "bottomright")
+                  color = "gray",
+                  highlight = highlightOptions(
+                    weight = 5,
+                    color = "#666",
+                    fillOpacity = 0.7,
+                    bringToFront = TRUE),
+                  label = sprintf("%s - %s", tidy$NM_ESTADO, tidy$variavel),
+                  labelOptions = labelOptions(
+                    style = list("font-weight" = "normal", padding = "6px 11px"),
+                    textsize = "15px",
+                    direction = "auto"))   %>%
+      addLegend(pal = pal, values = round(tidy$variavel,4), labFormat = function(type, cuts, p) {  # legenda para colorQuantile
+        n = length(cuts)
+        paste0(round(cuts[-n],2), " &ndash; ", round(cuts[-1],2))},
+        title = select_choices[which(input == select_choices)],
+        labels = ~tidy$NM_ESTADO,
+        position = "bottomright")
+    
+  } else {
+    
+    leaflet(tidy) %>%
+      addProviderTiles(providers$OpenStreetMap.Mapnik) %>%
+      addPolygons(fillColor = ~pal(variavel), 
+                  weight = 1.5,
+                  opacity = 0.7,
+                  fillOpacity = 0.7,
+                  color = "gray",
+                  highlight = highlightOptions(
+                    weight = 5,
+                    color = "#666",
+                    fillOpacity = 0.7,
+                    bringToFront = TRUE),
+                  label = sprintf("%s - %s", tidy$NM_ESTADO, paste0(100*round(tidy$variavel,4),"%")),
+                  labelOptions = labelOptions(
+                    style = list("font-weight" = "normal", padding = "6px 11px"),
+                    textsize = "15px",
+                    direction = "auto"))   %>%
+      addLegend(pal = pal, values = round(tidy$variavel,4), labFormat = function(type, cuts, p) {  # legenda para colorQuantile
+        n = length(cuts)
+        paste0(100*round(cuts[-n],4),"%", " &ndash; ", 100*round(cuts[-1],4),"%")},
+        title = select_choices[which(input == select_choices)],
+        labels = ~tidy$NM_ESTADO,
+        position = "bottomright")
+  }
+  
+  
   
   #addLegend(pal = pal, values = ~tidy$variavel, opacity = 0.7, # legenda para colorBin
   #          title = select_choices[which(input == select_choices)],
@@ -252,31 +289,60 @@ plot_mapa <- function(input){
 # gráfico de barras por estado
 plot_bar <- function(input){
   
-  Frequencia = round(as.vector(data_state[,(which(input == select_choices) + 1)]), 2)
-  selcor = fcolor[which(input == select_choices)]
-  
-  data_state$Frequencia <- Frequencia   ### Para organizar o grafico por frequencia do estado
-  data_state = data_state %>%
-    arrange(Frequencia)
-  ordem <- data_state$state
-  
-  temp <- data_state %>%
-    select(state, Frequencia) %>% 
-    mutate(obs_text = Frequencia)
-  
-  names(temp)[1] <- 'UF'
-  
-  
-  p = ggplot(temp, aes(x = UF, y = Frequencia)) +
-    geom_col(fill = selcor) +
-    geom_text(aes(label = paste0(temp$obs_text)), size = 3) +
-    scale_x_discrete(limits = ordem) +
-    coord_flip() +
-    ylim(0, max(Frequencia) + mean(Frequencia)) + 
-    labs(x = NULL, y = NULL) + 
-    theme(plot.background = element_rect(fill = "transparent", color = NA), 
-          axis.ticks.x = element_blank(), axis.text.x = element_blank())
-  
+  if(input != "Letalidade") {
+    
+    Frequencia = round(as.vector(data_state[,(which(input == select_choices) + 1)]), 2)
+    selcor = fcolor[which(input == select_choices)]
+    
+    data_state$Frequencia <- Frequencia   ### Para organizar o grafico por frequencia do estado
+    data_state = data_state %>%
+      arrange(Frequencia)
+    ordem <- data_state$state
+    
+    temp <- data_state %>%
+      select(state, Frequencia) %>% 
+      mutate(obs_text = Frequencia)
+    
+    names(temp)[1] <- 'UF'
+    
+    
+    p = ggplot(temp, aes(x = UF, y = Frequencia)) +
+      geom_col(fill = selcor) +
+      geom_text(aes(label = paste0(temp$obs_text)), size = 3) +
+      scale_x_discrete(limits = ordem) +
+      coord_flip() +
+      ylim(0, max(Frequencia) + mean(Frequencia)) + 
+      labs(x = NULL, y = NULL) + 
+      theme(plot.background = element_rect(fill = "transparent", color = NA), 
+            axis.ticks.x = element_blank(), axis.text.x = element_blank())
+    
+  } else {
+    
+    Frequencia = round(as.vector(data_state[,(which(input == select_choices) + 1)]), 4)
+    selcor = fcolor[which(input == select_choices)]
+    
+    data_state$Frequencia <- Frequencia   ### Para organizar o grafico por frequencia do estado
+    data_state = data_state %>%
+      arrange(Frequencia)
+    ordem <- data_state$state
+    
+    temp <- data_state %>%
+      select(state, Frequencia) %>% 
+      mutate(obs_text = Frequencia)
+    
+    names(temp)[1] <- 'UF'
+    
+    
+    p = ggplot(temp, aes(x = UF, y = Frequencia)) +
+      geom_col(fill = selcor) +
+      geom_text(aes(label = paste0(100*temp$obs_text,"%")), size = 3) +
+      scale_x_discrete(limits = ordem) +
+      coord_flip() +
+      ylim(0, max(Frequencia) + mean(Frequencia)) + 
+      labs(x = NULL, y = NULL) + 
+      theme(plot.background = element_rect(fill = "transparent", color = NA), 
+            axis.ticks.x = element_blank(), axis.text.x = element_blank())
+  }
   
   ggplotly(p, tooltip = c('UF', 'Frequencia')) %>%
     style(textposition = "middleright") %>%
@@ -314,13 +380,13 @@ week_geral <- function(input){
     unique()
   
   temp2 <- temp2 %>%
-    mutate(conf_diario = c(confirmed[1], diff(confirmed))) %>%
-    mutate(deaths_diario = c(deaths[1], diff(deaths))) %>%
-    aggregate(cbind(conf_diario, deaths_diario) ~ epidemiological_week_2020, data = ., sum) %>%
-    mutate(taxa = conf_diario/pop_br*100000) %>%
-    mutate(letal = deaths_diario/conf_diario)
+    group_by(epidemiological_week_2020) %>%
+    filter(date == max(date)) %>%
+    ungroup() %>%
+    mutate(taxa = confirmed/pop_br*100000) %>%
+    mutate(letal = deaths/confirmed)
   
-  colnames(temp2) <- c('ep_week', 'confirmed', 'deaths', 'taxa_per_100k', 'letal')
+  colnames(temp2) <- c("date", 'confirmed', 'deaths', 'ep_week', 'taxa_per_100k', 'letal')
   
   temp2$taxa_per_100k <- round(temp2$taxa_per_100k, 3)
   temp2$letal <- round(temp2$letal, 3)
@@ -346,6 +412,7 @@ week_geral <- function(input){
       geom_bar(aes(x = ep_week, y = Frequencia), fill = col_sel, stat = 'identity') + 
       theme(axis.text.x = element_text(angle = 45, size = 8, vjust = 0.5)) + 
       labs(x = NULL, y = name_aux) + 
+      scale_y_continuous(labels = number_format()) +
       theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
       theme(plot.background = element_rect(fill = "transparent", color = NA)) 
     
@@ -363,6 +430,11 @@ week_geral <- function(input){
       labs(x = NULL, y = paste0(input)) + 
       theme(axis.text.x = element_text(angle = 0, hjust = 1)) + 
       theme(plot.background = element_rect(fill = "transparent", color = NA))
+    
+    if(input == "Letalidade") {
+      p <- p +
+        scale_y_continuous(labels=percent)
+    }
     
     ggplotly(p) %>%
       layout(xaxis = list(tickmode = 'array', 
@@ -404,8 +476,7 @@ plot_mapa_uf <- function(estado,input) {
     arredonda <- 2
   } else {
     paleta <- "PuRd"
-    arredonda <- 2
-    dados_mapa$var <- 100*dados_mapa$var
+    arredonda <- 4
   }
   
   # criando intervalo com uma função muito boa
@@ -414,33 +485,64 @@ plot_mapa_uf <- function(estado,input) {
   
   if(aux_var!="death_rate") {
     intervalos[["brks"]][[2]] <- 1
+    
+    pal <- colorBin(palette=paleta, domain = y_quantidade, bins = intervalos[["brks"]])
+    
+    leaflet(dados_mapa) %>%
+      addTiles(urlTemplate = "http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga", attribution = 'Google') %>%
+      addPolygons(fillColor = ~pal(y_quantidade), 
+                  weight = 1.5,
+                  opacity = 0.7,
+                  fillOpacity = 0.7,
+                  color = "gray",
+                  highlight = highlightOptions(
+                    weight = 5,
+                    color = "#666",
+                    fillOpacity = 0.7,
+                    bringToFront = TRUE),
+                  label = sprintf("%s - %s", dados_mapa$municipio, y_quantidade),
+                  labelOptions = labelOptions(
+                    style = list("font-weight" = "normal", padding = "6px 11px"),
+                    textsize = "15px",
+                    direction = "auto"))   %>%
+      addLegend(pal = pal, values = round(y_quantidade,arredonda), labFormat = function(type, cuts, p) {  # legenda para colorQuantile
+        n = length(cuts)
+        paste0(round(cuts[-n],arredonda), " &ndash; ", round(cuts[-1],arredonda))},
+        title = select_choices[which(estado == select_choices)],
+        labels = ~dados_mapa$municipio,
+        position = "bottomright")
+    
+  } else {
+    
+    pal <- colorBin(palette=paleta, domain = y_quantidade, bins = intervalos[["brks"]])
+    
+    leaflet(dados_mapa) %>%
+      addTiles(urlTemplate = "http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga", attribution = 'Google') %>%
+      addPolygons(fillColor = ~pal(y_quantidade), 
+                  weight = 1.5,
+                  opacity = 0.7,
+                  fillOpacity = 0.7,
+                  color = "gray",
+                  highlight = highlightOptions(
+                    weight = 5,
+                    color = "#666",
+                    fillOpacity = 0.7,
+                    bringToFront = TRUE),
+                  label = sprintf("%s - %s", dados_mapa$municipio, paste0(100*round(y_quantidade,arredonda),"%")),
+                  labelOptions = labelOptions(
+                    style = list("font-weight" = "normal", padding = "6px 11px"),
+                    textsize = "15px",
+                    direction = "auto"))   %>%
+      addLegend(pal = pal, values = round(y_quantidade,arredonda), labFormat = function(type, cuts, p) {  # legenda para colorQuantile
+        n = length(cuts)
+        paste0(100*round(cuts[-n],arredonda),"%", " &ndash; ", 100*round(cuts[-1],arredonda),"%")},
+        title = select_choices[which(estado == select_choices)],
+        labels = ~dados_mapa$municipio,
+        position = "bottomright")
+    
   }
   
-  pal <- colorBin(palette=paleta, domain = y_quantidade, bins = intervalos[["brks"]])
   
-  leaflet(dados_mapa) %>%
-    addTiles(urlTemplate = "http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga", attribution = 'Google') %>%
-    addPolygons(fillColor = ~pal(y_quantidade), 
-                weight = 1.5,
-                opacity = 0.7,
-                fillOpacity = 0.7,
-                color = "gray",
-                highlight = highlightOptions(
-                  weight = 5,
-                  color = "#666",
-                  fillOpacity = 0.7,
-                  bringToFront = TRUE),
-                label = sprintf("%s - %s", dados_mapa$municipio, y_quantidade),
-                labelOptions = labelOptions(
-                  style = list("font-weight" = "normal", padding = "6px 11px"),
-                  textsize = "15px",
-                  direction = "auto"))   %>%
-    addLegend(pal = pal, values = round(y_quantidade,arredonda), labFormat = function(type, cuts, p) {  # legenda para colorQuantile
-      n = length(cuts)
-      paste0(round(cuts[-n],arredonda), " &ndash; ", round(cuts[-1],arredonda))},
-      title = select_choices[which(estado == select_choices)],
-      labels = ~dados_mapa$municipio,
-      position = "bottomright")
   
 }
 
@@ -456,6 +558,12 @@ tabela_uf <- function(estado, input) {
     filter(is_last & place_type=="city" & state == estado) %>%
     select(city,!!var) %>%
     arrange(desc(!!var))
+  
+  if(aux_var == "death_rate") {
+    aux <- aux %>%
+      filter(!is.na(!!var))
+    aux$death_rate <- paste0(100*round(aux$death_rate,4),"%")
+  }
   
   texto <- ifelse(
     test = aux_var == "confirmed",
@@ -485,7 +593,7 @@ tabela_uf <- function(estado, input) {
     formatStyle("city",color = "#787878", fontSize = "14px", backgroundColor = "#f0f0f0") %>%
     formatStyle(aux_var, color = fcolor[which(input==select_choices)], fontWeight = "bold",fontSize = "14px", backgroundColor = "#f0f0f0")
   
-  if(aux_var %in% c("confirmed_per_100k_inhabitants","death_rate")) {
+  if(aux_var == "confirmed_per_100k_inhabitants") {
     tabela <- formatRound(tabela, aux_var, digits = 2)
   }
   
@@ -543,6 +651,11 @@ plot_serie_uf <- function(estado, input, tipo) {
         theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
               panel.grid.major = element_blank())
       
+      if(aux_var == "death_rate") {
+        p <- p +
+          scale_y_continuous(labels=percent)
+      }
+      
     }
     
     
@@ -594,6 +707,11 @@ plot_serie_uf <- function(estado, input, tipo) {
         theme(axis.text.x = element_text(angle=45,size=8, vjust = 0.5)) +
         theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
               panel.grid.major = element_blank())
+      
+      if(aux_var == "death_rate") {
+        p <- p +
+          scale_y_continuous(labels=percent)
+      }
       
     }
     
@@ -766,7 +884,7 @@ obitos_separados <- function(input, escolha){
 }
 
 
-data_hora_atual <- str_c("-Última atualização em ",format(Sys.time(), "%H:%M %d/%m/%Y"))
+data_hora_atual <- str_c("-Última atualização em ",format(Sys.time(), "%d/%m/%Y"))
 
 #-------------------------------------
 # ui do dashboard:
