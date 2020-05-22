@@ -5,8 +5,9 @@ account: mhbarbian
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2133446
-bundleId: 3140045
+bundleId: 3177213
 url: https://mhbarbian.shinyapps.io/CovidMetrika/
-when: 1589337631.03553
+when: 1590116712.57279
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: LICENSE|README.md

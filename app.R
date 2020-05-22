@@ -23,7 +23,7 @@ library(RColorBrewer)
 library(DT)
 library(shinyEffects)
 library(scales)
-
+library(lubridate)
 ################
 
 # dando source pra rodar código de extração dos dados assim, quando for fazer
@@ -916,7 +916,7 @@ obitos_separados <- function(input, escolha){
 }
 
 
-data_hora_atual <- str_c("-Última atualização em ",format(Sys.time(), "%d/%m/%Y"))
+#data_hora_atual <- str_c("-Última atualização em ",format(Sys.time(), "%d/%m/%Y"))
 
 #-------------------------------------
 # ui do dashboard:
@@ -973,7 +973,7 @@ ui <- dashboardPage(
                 valueBoxOutput("taxaBox", width = 3),
                 valueBoxOutput("letalBox", width = 3),
                 
-                h6(em(data_hora_atual)),
+              #  h6(em(data_hora_atual)),
                 
                 #-------------------------------------
                 # plot geral - primeiro plot
@@ -1013,7 +1013,7 @@ ui <- dashboardPage(
                 valueBoxOutput("obitos_uf", width = 3),
                 valueBoxOutput("taxa_uf", width = 3),
                 valueBoxOutput("letal_uf", width = 3),
-                h6(em(data_hora_atual)),
+              #  h6(em(data_hora_atual)),
               ),
               fluidRow(
                 box(
@@ -1059,7 +1059,7 @@ ui <- dashboardPage(
                 valueBoxOutput("box_pneumonia", width = 4),
                 valueBoxOutput("box_falha", width = 4),
                 valueBoxOutput("box_covid", width = 4),
-                h6(em(data_hora_atual)),
+             #   h6(em(data_hora_atual)),
                 column(
                   width = 12,
                   tabBox(id = "tab_cart",
