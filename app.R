@@ -40,6 +40,7 @@ options(OutDec= ",")
 mapa_brasil <- sf::st_read("shapefiles/brasil_uf/BRUFE250GC_SIR.shp", quiet = TRUE) %>%
   mutate(NM_ESTADO = str_to_title(NM_ESTADO)) # todas os estados com letra  de título
 
+
 # shapefile uf_municipios
 
 lendo_shapefile_uf_mun <- function() {
@@ -75,6 +76,37 @@ mapa_brasil <- mapa_brasil %>%
 #-------------------------------------
 # banco de dados de  casos confirmados:
 covid <- readRDS(here::here("dados",'casos_covid19_br_mun.rds'))
+
+# criando banco_14_dias
+
+banco_14_dias <- covid %>%
+  filter(place_type == "state") %>%
+  group_by(state) %>%
+  mutate(data_inicial = min(date[deaths >= 10])) %>%
+  ungroup()
+
+banco_14_dias <- as.data.frame(banco_14_dias)
+
+aux <- list()
+
+for (i in unique(banco_14_dias$state)) {
+  for (j in unique(banco_14_dias[banco_14_dias$state == i, "data_inicial"]):max(banco_14_dias[banco_14_dias$state == i,"date"])) {
+    aux[[i]][[as.character(as_date(j))]] <- tibble(confirmados_14_dias = banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "confirmed"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "confirmed"],
+                                                   obitos_14_dias = banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "deaths"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "deaths"],
+                                                   confirmados_100k_hab_14_dias = (banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "confirmed"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "confirmed"])*100000/banco_14_dias[banco_14_dias$state == i,"estimated_population_2019"][1],
+                                                   obitos_100k_hab_14_dias = (banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "deaths"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "deaths"])*100000/banco_14_dias[banco_14_dias$state == i,"estimated_population_2019"][1],
+                                                   state = i,
+                                                   date = as_date(j))
+  }
+}
+
+aux <- aux %>%
+  map(bind_rows) %>%
+  bind_rows()
+
+banco_14_dias <- left_join(banco_14_dias,aux, by = c("state","date"))
+
+rm(aux)
 
 # banco de dados por estado:
 data_state <- covid %>%
