@@ -104,7 +104,14 @@ aux <- aux %>%
   map(bind_rows) %>%
   bind_rows()
 
-banco_14_dias <- left_join(banco_14_dias,aux, by = c("state","date"))
+aux2 <- read_excel("dados/estados_siglas.xlsx") %>%
+  mutate(estado = str_to_title(Estado), id = as.factor(Sigla)) %>%
+  arrange(Codigo) %>%
+  select(id,Regiao)
+
+banco_14_dias <- left_join(banco_14_dias,aux, by = c("state","date")) %>%
+  left_join(aux2, by = c("state" = "id")) %>%
+  filter(deaths > 10)
 
 rm(aux)
 
@@ -173,6 +180,9 @@ casos_br <- casos_br %>%
   mutate(ep_week = temp$epidemiological_week_2020)
 
 rm(temp)
+
+estados_siglas <- read_excel("dados/estados_siglas.xlsx") %>%
+  mutate(NM_ESTADO = str_to_title(Estado), id = as.factor(Sigla))
 
 # serie temporal com os dados no brasil
 plot_geral <- function(input){
@@ -913,6 +923,31 @@ obitos_separados <- function(input, escolha){
                            xanchor = "center",  # use center of legend as anchor
                            x = 0.5))
   }
+}
+
+
+# plot 14 dias brasil
+
+plot_14_dias_br <- function(estado, nivel) {
+  
+  if(nivel == "br") {
+    aux <- banco_14_dias %>%
+      filter(state %in% estado)
+  } else {
+    regiao <- estados_siglas[estados_siglas$id==estado,"Regiao"]
+    
+    aux <- banco_14_dias %>%
+      filter(Regiao == regiao$Regiao)
+  }
+  
+  p1 <- ggplot(aux3) +
+    geom_point(aes(x = obitos_100k_hab_14_dias, y = confirmados_100k_hab_14_dias, col = state, label = date)) +
+    geom_path(aes(x = obitos_100k_hab_14_dias, y = confirmados_100k_hab_14_dias, col = state, group = state)) +
+    geom_abline(slope = 10, size = .3) +
+    geom_abline(slope = 100, size = .3)
+  
+  ggplotly(p)
+  
 }
 
 
