@@ -37,7 +37,10 @@ p1 <- ggplot(aux3) +
   geom_point(aes(x = obitos_100k_hab_14_dias, y = confirmados_100k_hab_14_dias, col = state, label = date)) +
   geom_path(aes(x = obitos_100k_hab_14_dias, y = confirmados_100k_hab_14_dias, col = state, group = state)) +
   geom_abline(slope = 10, size = .3) +
-  geom_abline(slope = 100, size = .3)
+  geom_abline(slope = 100, size = .3) +
+  labs(x = "óbitos por 100 mil habitantes nos últimos 14 dias",
+       y = "Casos confirmados por 100 mil habitantes nos últimos 14 dias",
+       caption = "Dias consecutivos são conectados pelas linhas")
 
 y_range <- layer_scales(p1)$y$range$range
 x_range <- layer_scales(p1)$x$range$range
@@ -62,11 +65,14 @@ x_to_y <- (x_range[2] - x_range[1])/(y_range[2] - y_range[1])
 
 
 anotacoes <- list(
-  x = c(diff(x_range)*11/12+x_range[1],diff(x_range)*1/15+x_range[1]-(1/100*diff(x_range))),
-  y = c((diff(x_range)*11/12+x_range[1])*10-(1/100*diff(y_range)),(diff(x_range)*1/15+x_range[1])*100+(1/100*diff(y_range))),
-  text = c("Letalidade 10%","Letalidade 1%"),
-  textangle = c(-(atan(10 * (x_to_y-0.003)) * 180/pi),-atan(100 * (x_to_y-0.003)) * 180/pi),
-  showarrow = F
+  x = c(diff(x_range)*11/12+x_range[1],diff(x_range)*1/15+x_range[1]-(1/100*diff(x_range)),1),
+  y = c((diff(x_range)*11/12+x_range[1])*10-(1/100*diff(y_range)),(diff(x_range)*1/15+x_range[1])*100+(1/100*diff(y_range)),0.005),
+  text = c("Letalidade 10%","Letalidade 1%","Dias consecutivos desde o marco de 10 óbitos são conectados pelas linhas"),
+  textangle = c(-(atan(10 * (x_to_y-0.003)) * 180/pi),-atan(100 * (x_to_y-0.003)) * 180/pi,0),
+  xref = c("x","x","paper"),
+  yref = c("y","y","paper"),
+  showarrow = F,
+  font = list(size = 13)
 )
 
 lyp2 <- ggplotly(p1) %>%
@@ -75,3 +81,7 @@ lyp2 <- ggplotly(p1) %>%
 
 ggplotly(p1) %>%
   layout(annotations = anotacoes)
+
+
+
+
