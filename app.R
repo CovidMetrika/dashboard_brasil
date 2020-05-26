@@ -394,96 +394,91 @@ plot_bar <- function(input){
 }
 
 # dados do brasil por semana epi
-week_geral <- function(input){
-  
-  # banco com última atualização para não ficar dados negativos
+week_geral <- function(input) {
   
   ultima_atualizacao <- covid %>%
     select(state, confirmed, deaths, date, place_type, is_last) %>%
     filter(place_type == "state") %>%
     group_by(is_last) %>%
     filter(is_last) %>%
-    summarise(confirmed = sum(confirmed), deaths = sum(deaths), conf_per100k = sum(confirmed)/pop_br*100000,
-              letal = sum(deaths)/sum(confirmed))
+    summarise(confirmed = sum(confirmed), deaths = sum(deaths), confirmed_per_100k_inhabitants = sum(confirmed)/pop_br*100000,
+              death_rate = sum(deaths)/sum(confirmed))
   
-  #-- banco de dados para semana epidemiologica
-  temp <-  covid %>%
-    select(state, confirmed, deaths, 
-           date, place_type) %>%
-    filter(place_type == 'state') %>%
-    aggregate(cbind(confirmed, deaths) ~ date, data = ., sum)
+  aux_var <- select_choices2[which(input == select_choices)]
   
-  temp[nrow(temp),c("confirmed","deaths")] <- c(ultima_atualizacao$confirmed,ultima_atualizacao$deaths)
+  var <- rlang::sym(aux_var)
+  
+  col_sel <- fcolor[which(input == select_choices)]
+  
+  aux <- covid %>%
+    filter(place_type=="state") %>%
+    arrange(date)
   
   temp2 <- obts %>%
-    select(date, epidemiological_week_2020)
-  
-  temp2 <- merge(temp, temp2, by = 'date') %>%
+    select(date, epidemiological_week_2020) %>%
+    filter(date %in% aux$date) %>%
     unique()
   
-  temp2 <- temp2 %>%
+  aux <- aux %>%
+    group_by(date) %>%
+    summarise(confirmed = sum(confirmed), deaths = sum(deaths), confirmed_per_100k_inhabitants = sum(confirmed)/pop_br*100000,
+              death_rate = sum(deaths)/sum(confirmed)) %>%
+    left_join(temp2, by = "date") %>%
     group_by(epidemiological_week_2020) %>%
     filter(date == max(date)) %>%
-    ungroup() %>%
-    mutate(taxa = confirmed/pop_br*100000) %>%
-    mutate(letal = deaths/confirmed)
+    ungroup()
   
-  colnames(temp2) <- c("date", 'confirmed', 'deaths', 'ep_week', 'taxa_per_100k', 'letal')
+  aux <- as.data.frame(aux)
   
-  temp2$taxa_per_100k <- round(temp2$taxa_per_100k, 3)
-  temp2$letal <- round(temp2$letal, 3)
+  aux[nrow(aux),c("confirmed","deaths","confirmed_per_100k_inhabitants","death_rate")] <- c(ultima_atualizacao$confirmed,
+                                                                                            ultima_atualizacao$deaths,
+                                                                                            ultima_atualizacao$confirmed_per_100k_inhabitants,
+                                                                                            ultima_atualizacao$death_rate)
   
+  ordem <- as.character(aux$epidemiological_week_2020)
   
-  temp2 <- temp2 %>%
-    select(confirmed, deaths, taxa_per_100k, letal, ep_week)
-  
-  temp <- temp2[,c(which(input == select_choices), 5)] # dado selecionado no input
-  col_sel <- fcolor[which(input == select_choices)]
-  colnames(temp)[1] <- 'Frequencia'
-  
-  if(which(input == select_choices) < 3){
+  if(aux_var %in% select_choices2[c(1,2)]) {
     
-    name_aux <- ifelse(input == select_choices[1], 
-                       'Casos Acumulados', 'Óbitos Acumulados')
+    aux$novos <- c(as.data.frame(aux)[1,aux_var],rep(NA,nrow(aux)-1))
+    for(i in 2:nrow(aux)) {
+      aux$novos[i] <- as.data.frame(aux)[i,aux_var]-as.data.frame(aux)[i-1,aux_var]
+    }
     
-    temp$Acumulado <- cumsum(temp$Frequencia)
+    aux$epidemiological_week_2020 <- as.character(aux$epidemiological_week_2020)
     
-    p <- ggplot(temp) +
-      geom_line(aes(x = ep_week, y = Acumulado, group = 1), color = col_sel, linetype = 'dotted') +
-      geom_point(aes(x = ep_week, y = Acumulado), color = col_sel) + 
-      geom_bar(aes(x = ep_week, y = Frequencia), fill = col_sel, stat = 'identity') + 
-      theme(axis.text.x = element_text(angle = 45, size = 8, vjust = 0.5)) + 
-      labs(x = NULL, y = name_aux) + 
+    p <- ggplot(aux) +
+      geom_line(aes(x = epidemiological_week_2020, y = !!var, group = 1), color = col_sel, linetype = 'dotted') +
+      geom_point(aes(x = epidemiological_week_2020, y = !!var), color = col_sel) + 
+      geom_col(aes(x = epidemiological_week_2020, y = novos), fill = col_sel) +
+      scale_x_discrete(limits = ordem) +
       scale_y_continuous(labels = number_format()) +
-      theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
-      theme(plot.background = element_rect(fill = "transparent", color = NA)) 
-    
-    ggplotly(p) %>%
-      layout(xaxis = list(tickmode = 'array', 
-                          tickvals = temp$ep_week, 
-                          ticktext = temp$ep_week))
+      labs(x = "Semana Epidemiológica", y = input) +
+      theme(axis.text.x = element_text(angle=45,size=8, vjust = 0.5)) +
+      theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+            panel.grid.major = element_blank())
     
   } else {
     
-    p <- ggplot(temp) +
-      geom_line(aes(x = ep_week, y = Frequencia, group = 1), color = col_sel) +
-      geom_point(aes(x = ep_week, y = Frequencia, group = 1), color = col_sel) +
-      theme(axis.text.x = element_text(angle = 45, size = 8, vjust = 0.5)) + 
-      labs(x = NULL, y = paste0(input)) + 
-      theme(axis.text.x = element_text(angle = 0, hjust = 1)) + 
-      theme(plot.background = element_rect(fill = "transparent", color = NA))
+    aux$epidemiological_week_2020 <- as.character(aux$epidemiological_week_2020)
     
-    if(input == "Letalidade") {
+    p <- ggplot(aux) +
+      geom_line(aes(x = epidemiological_week_2020, y = !!var, group = 1), color = col_sel, linetype = 'dotted') +
+      geom_point(aes(x = epidemiological_week_2020, y = !!var), color = col_sel) + 
+      scale_x_discrete(limits = ordem) +
+      labs(x = "Semana Epidemiológica", y = input) +
+      theme(axis.text.x = element_text(angle=45,size=8, vjust = 0.5)) +
+      theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+            panel.grid.major = element_blank())
+    
+    if(aux_var == "death_rate") {
       p <- p +
         scale_y_continuous(labels=percent)
     }
     
-    ggplotly(p) %>%
-      layout(xaxis = list(tickmode = 'array', 
-                          tickvals = temp$ep_week, 
-                          ticktext = temp$ep_week))
-    
   }
+  
+  ggplotly(p)
+  
 }
 
 # funtion mapa uf
