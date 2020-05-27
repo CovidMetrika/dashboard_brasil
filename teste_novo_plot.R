@@ -1,87 +1,153 @@
-# gráfico 14 dias
+input <- "Casos Confirmados"
+tipo <- "br"
+filtro <- c("SP","RJ","CE","PE","AM")
 
-aux2 <- read_excel("dados/estados_siglas.xlsx") %>%
-  mutate(estado = str_to_title(Estado), id = as.factor(Sigla)) %>%
-  arrange(Codigo) %>%
-  select(id,Regiao)
-
-aux <- banco_14_dias %>%
-  filter(deaths > 10) %>%
-  left_join(aux2, by = c("state" = "id"))
+plot_quadradinhos <- function(filtro, input, tipo) {
   
-minx <- min(banco_14_dias$obitos_100k_hab_14_dias) 
-miny <- min(banco_14_dias$confirmados_100k_hab_14_dias) 
-maxx <- max(banco_14_dias$obitos_100k_hab_14_dias) 
-maxy <- min(banco_14_dias$confirmados_100k_hab_14_dias) 
-
-x_range_ <- c(min(aux3$obitos_100k_hab_14_dias, na.rm=T),max(aux3$obitos_100k_hab_14_dias, na.rm=T))  
-y_range <- 
+  aux_var <- select_choices2[which(input == select_choices)]
   
+  if(tipo == "br") {
+    aux_var_2 <- "state"
+  } else {
+    aux_var_2 <- "city"
+  }
   
-p1 <- ggplot(banco_14_dias) +
-  geom_point(aes(x = obitos_100k_hab_14_dias, y = confirmados_100k_hab_14_dias, col = state, label = date)) +
-  geom_path(aes(x = obitos_100k_hab_14_dias, y = confirmados_100k_hab_14_dias, col = state, group = state)) +
-  geom_abline(slope = 10, size = .3) +
-  geom_abline(slope = 100, size = .3) +
-  facet_wrap(~Regiao, scales = "free")
-
-ggplotly(p1)
-
-aux3 <- aux %>%
-  filter(state %in% c("AM","PA","SP","RJ","CE","PE"))
-
-aux3 <- banco_14_dias %>%
-  filter(Regiao == "Sudeste")
-
-p1 <- ggplot(aux3) +
-  geom_point(aes(x = obitos_100k_hab_14_dias, y = confirmados_100k_hab_14_dias, col = state, label = date)) +
-  geom_path(aes(x = obitos_100k_hab_14_dias, y = confirmados_100k_hab_14_dias, col = state, group = state)) +
-  geom_abline(slope = 10, size = .3) +
-  geom_abline(slope = 100, size = .3) +
-  labs(x = "óbitos por 100 mil habitantes nos últimos 14 dias",
-       y = "Casos confirmados por 100 mil habitantes nos últimos 14 dias",
-       caption = "Dias consecutivos são conectados pelas linhas")
-
-y_range <- layer_scales(p1)$y$range$range
-x_range <- layer_scales(p1)$x$range$range
-x_to_y <- (x_range[2] - x_range[1])/(y_range[2] - y_range[1])
-
-#p1 <- p1 + coord_fixed(ratio = x_to_y) + 
-#  annotate(
-#    "text",
-#    x = diff(x_range)*11/12+x_range[1],
-#    y = (diff(x_range)*11/12+x_range[1])*10-(1/100*diff(y_range)),
-#    angle = atan(10 * x_to_y) * 180/pi,
-#    label = "Letalidade 10%"
-#  ) +
-#  annotate(
-#    "text",
-#    x = diff(x_range)*1/15+x_range[1]-(1/100*diff(x_range)),
-#    y = (diff(x_range)*1/15+x_range[1])*100+(1/100*diff(y_range)),
-#    angle = atan(100 * x_to_y) * 180/pi,
-#    label = "Letalidade 1%"
-#  )
-
-
-
-anotacoes <- list(
-  x = c(diff(x_range)*11/12+x_range[1],diff(x_range)*1/15+x_range[1]-(1/100*diff(x_range)),1),
-  y = c((diff(x_range)*11/12+x_range[1])*10-(1/100*diff(y_range)),(diff(x_range)*1/15+x_range[1])*100+(1/100*diff(y_range)),0.005),
-  text = c("Letalidade 10%","Letalidade 1%","Dias consecutivos desde o marco de 10 óbitos são conectados pelas linhas"),
-  textangle = c(-(atan(10 * (x_to_y-0.003)) * 180/pi),-atan(100 * (x_to_y-0.003)) * 180/pi,0),
-  xref = c("x","x","paper"),
-  yref = c("y","y","paper"),
-  showarrow = F,
-  font = list(size = 13)
-)
-
-lyp2 <- ggplotly(p1) %>%
-  layout(annotations = anotacoes,
-         yaxis = list(scaleanchor = "x", scaleratio = x_to_y))
-
-ggplotly(p1) %>%
-  layout(annotations = anotacoes)
-
-
-
-
+  var <- rlang::sym(aux_var)
+  
+  var_2 <- rlang::sym(aux_var_2)
+  
+  if (aux_var == "confirmed") {
+    paleta <- "Reds"
+  } else if (aux_var == "deaths") {
+    paleta <- "Purples"
+  } else if (aux_var == "confirmed_per_100k_inhabitants") {
+    paleta <- "Oranges"
+  } else {
+    paleta <- "PuRd"
+  }
+  
+  if(tipo == "br") {
+    aux <- covid %>%
+      filter(place_type == "state") %>%
+      filter(!!var_2 %in% filtro) %>%
+      arrange(date)
+  } else {
+    aux <- covid %>%
+      filter(state == "city") %>%
+      filter(!!var_2 %in% filtro) %>%
+      arrange(date)
+  }
+  
+  ggplot(aux, aes(x = date, y = state, fill = !!var)) +
+    geom_tile() +
+    scale_fill_brewer(palette = paleta)
+  
+  aux <- covid %>%
+    filter(place_type=="state" & state == estado) %>%
+    arrange(date)
+  
+  if(tipo == "Diário") {
+    
+    ordem <- as.character(format(aux$date, "%d-%m"))
+    
+    if(aux_var %in% select_choices2[c(1,2)]) {
+      
+      aux$novos <- c(aux[1,aux_var],rep(NA,nrow(aux)-1))
+      for(i in 2:nrow(aux)) {
+        aux$novos[i] <- aux[i,aux_var]-aux[i-1,aux_var]
+      }
+      
+      aux$date <- as.character(format(aux$date, "%d-%m"))
+      
+      p <- ggplot(aux) +
+        geom_line(aes(x = date, y = !!var, group = 1), color = col_sel, linetype = 'dotted') +
+        geom_point(aes(x = date, y = !!var), color = col_sel) + 
+        geom_col(aes(x = date, y = novos), fill = col_sel) +
+        scale_x_discrete(limits = ordem) +
+        labs(x = "Dia", y = input) +
+        theme(axis.text.x = element_text(angle=45,size=8, vjust = 0.5)) +
+        theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+              panel.grid.major = element_blank())
+      
+    } else {
+      
+      aux$date <- as.character(format(aux$date, "%d-%m"))
+      
+      p <- ggplot(aux) +
+        geom_line(aes(x = date, y = !!var, group = 1), color = col_sel, linetype = 'dotted') +
+        geom_point(aes(x = date, y = !!var), color = col_sel) + 
+        scale_x_discrete(limits = ordem) +
+        labs(x = "Dia", y = input) +
+        theme(axis.text.x = element_text(angle=45,size=8, vjust = 0.5)) +
+        theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+              panel.grid.major = element_blank())
+      
+      if(aux_var == "death_rate") {
+        p <- p +
+          scale_y_continuous(labels=percent)
+      }
+      
+    }
+    
+    
+    
+  } else {
+    
+    temp2 <- obts %>%
+      select(date, epidemiological_week_2020) %>%
+      filter(date %in% aux$date) %>%
+      unique()
+    
+    aux <- left_join(aux,temp2, by = "date") %>%
+      group_by(epidemiological_week_2020) %>%
+      filter(date == max(date)) %>%
+      ungroup()
+    
+    ordem <- as.character(aux$epidemiological_week_2020)
+    
+    
+    
+    if(aux_var %in% select_choices2[c(1,2)]) {
+      
+      aux$novos <- c(as.data.frame(aux)[1,aux_var],rep(NA,nrow(aux)-1))
+      for(i in 2:nrow(aux)) {
+        aux$novos[i] <- as.data.frame(aux)[i,aux_var]-as.data.frame(aux)[i-1,aux_var]
+      }
+      
+      aux$epidemiological_week_2020 <- as.character(aux$epidemiological_week_2020)
+      
+      p <- ggplot(aux) +
+        geom_line(aes(x = epidemiological_week_2020, y = !!var, group = 1), color = col_sel, linetype = 'dotted') +
+        geom_point(aes(x = epidemiological_week_2020, y = !!var), color = col_sel) + 
+        geom_col(aes(x = epidemiological_week_2020, y = novos), fill = col_sel) +
+        scale_x_discrete(limits = ordem) +
+        labs(x = "Semana Epidemiológica", y = input) +
+        theme(axis.text.x = element_text(angle=45,size=8, vjust = 0.5)) +
+        theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+              panel.grid.major = element_blank())
+      
+    } else {
+      
+      aux$epidemiological_week_2020 <- as.character(aux$epidemiological_week_2020)
+      
+      p <- ggplot(aux) +
+        geom_line(aes(x = epidemiological_week_2020, y = !!var, group = 1), color = col_sel, linetype = 'dotted') +
+        geom_point(aes(x = epidemiological_week_2020, y = !!var), color = col_sel) + 
+        scale_x_discrete(limits = ordem) +
+        labs(x = "Semana Epidemiológica", y = input) +
+        theme(axis.text.x = element_text(angle=45,size=8, vjust = 0.5)) +
+        theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+              panel.grid.major = element_blank())
+      
+      if(aux_var == "death_rate") {
+        p <- p +
+          scale_y_continuous(labels=percent)
+      }
+      
+    }
+    
+  }
+  
+  ggplotly(p) 
+  
+}
