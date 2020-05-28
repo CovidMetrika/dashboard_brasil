@@ -962,6 +962,54 @@ plot_14_dias <- function(estado, nivel) {
     layout(annotations = anotacoes)
 }
 
+# plot_quadradinhos
+
+plot_quadradinhos <- function(filtro, input, tipo) {
+  
+  aux_var <- select_choices2[which(input == select_choices)]
+  
+  if(tipo == "br") {
+    aux_var_2 <- "state"
+  } else {
+    aux_var_2 <- "city"
+  }
+  
+  var <- rlang::sym(aux_var)
+  
+  var_2 <- rlang::sym(aux_var_2)
+  
+  if (aux_var == "confirmed") {
+    paleta <- "Reds"
+  } else if (aux_var == "deaths") {
+    paleta <- "Purples"
+  } else if (aux_var == "confirmed_per_100k_inhabitants") {
+    paleta <- "Oranges"
+  } else {
+    paleta <- "PuRd"
+  }
+  
+  if(tipo == "br") {
+    aux <- covid %>%
+      filter(place_type == "state") %>%
+      filter(!!var_2 %in% filtro) %>%
+      arrange(date)
+  } else {
+    aux <- covid %>%
+      filter(state == "city") %>%
+      filter(!!var_2 %in% filtro) %>%
+      arrange(date)
+  }
+  
+  aux <- as.data.frame(aux)
+  
+  p <- ggplot(aux, aes(x = date, y = !!var_2, fill = !!var)) +
+    geom_tile() +
+    scale_fill_gradientn(name = select_choices[which(input == select_choices)],colours = brewer.pal(9,paleta)) +
+    theme_tufte(base_family="Helvetica")
+  
+  ggplotly(p)
+}
+
 
 #data_hora_atual <- str_c("-Última atualização em ",format(Sys.time(), "%d/%m/%Y"))
 
@@ -1054,7 +1102,11 @@ ui <- dashboardPage(
                   ),
                   plotlyOutput("plot_14_dias_br", height = 650L)
                 )
-              )
+              ),
+              #column(
+              #  width = 12,
+              #  uiOutput("ui_filtro_quadradinhos_br")
+              #)
                 
                 
               ) #fluidrow
@@ -1321,6 +1373,25 @@ server <- function(input, output) {
   
   output$plot_14_dias_br <- renderPlotly({
     plot_14_dias(estado = input$filtro_estados,nivel = "br")
+  })
+  
+  output$ui_filtro_quadradinhos_br <- renderUI({
+    box(
+      width = 12,
+      selectInput(
+        "filtro_quadradinhos_br",
+        label = "Selecione os estados de interesse",
+        choices = unique(banco_14_dias$state),
+        selected = unique(banco_14_dias$state),
+        multiple = T
+      ),
+      plotlyOutput("plot_quadradinhos_br", height = 650L)
+    )
+    
+  })
+  
+  output$plot_quadradinhos_br <- renderPlotly({
+    plot_quadradinhos(filtro = input$filtro_quadradinhos_br, tipo = "br", input = input$typevar)
   })
   
   #-------------------------------------

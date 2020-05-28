@@ -1,6 +1,7 @@
-input <- "Casos Confirmados"
+input <- "Casos/100k hab."
 tipo <- "br"
-filtro <- c("SP","RJ","CE","PE","AM")
+filtro <- c("SP","RJ","CE","PE","AM","AP","AC","MA","PE","RR")
+filtro <- unique(covid$state)
 
 plot_quadradinhos <- function(filtro, input, tipo) {
   
@@ -38,13 +39,14 @@ plot_quadradinhos <- function(filtro, input, tipo) {
       arrange(date)
   }
   
-  ggplot(aux, aes(x = date, y = state, fill = !!var)) +
-    geom_tile() +
-    scale_fill_brewer(palette = paleta)
+  aux <- as.data.frame(aux)
   
-  aux <- covid %>%
-    filter(place_type=="state" & state == estado) %>%
-    arrange(date)
+  p <- ggplot(aux, aes(x = date, y = !!var_2, fill = !!var)) +
+    geom_tile() +
+    scale_fill_gradientn(colours = brewer.pal(9,paleta)) +
+    theme_tufte(base_family="Helvetica")
+  
+  ggplotly(p)
   
   if(tipo == "Diário") {
     
