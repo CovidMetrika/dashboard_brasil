@@ -24,6 +24,7 @@ library(DT)
 library(shinyEffects)
 library(scales)
 library(lubridate)
+library(ggthemes)
 ################
 
 # dando source pra rodar código de extração dos dados assim, quando for fazer
@@ -964,7 +965,7 @@ plot_14_dias <- function(estado, nivel) {
 
 # plot_quadradinhos
 
-plot_quadradinhos <- function(filtro, input, tipo) {
+plot_quadradinhos <- function(filtro, input, tipo, estado = NA) {
   
   aux_var <- select_choices2[which(input == select_choices)]
   
@@ -989,16 +990,17 @@ plot_quadradinhos <- function(filtro, input, tipo) {
   }
   
   if(tipo == "br") {
-    aux <- covid %>%
-      filter(place_type == "state") %>%
-      filter(!!var_2 %in% filtro) %>%
-      arrange(date)
+    aux <- covid
   } else {
     aux <- covid %>%
-      filter(state == "city") %>%
-      filter(!!var_2 %in% filtro) %>%
-      arrange(date)
+      filter(state == estado)
   }
+  
+  aux <- aux %>%
+    filter(place_type == aux_var_2) %>%
+    filter(!!var_2 %in% filtro) %>%
+    arrange(date)
+  
   
   aux <- as.data.frame(aux)
   
@@ -1103,10 +1105,10 @@ ui <- dashboardPage(
                   plotlyOutput("plot_14_dias_br", height = 650L)
                 )
               ),
-              #column(
-              #  width = 12,
-              #  uiOutput("ui_filtro_quadradinhos_br")
-              #)
+              column(
+                width = 12,
+                uiOutput("ui_filtro_quadradinhos_br")
+              )
                 
                 
               ) #fluidrow
@@ -1158,7 +1160,8 @@ ui <- dashboardPage(
                   box(
                     width = 12,
                     plotlyOutput("plot_14_dias_uf", height = 650L)
-                  )
+                  ),
+                  uiOutput("ui_filtro_quadradinhos_uf")
                 )
               )
               
@@ -1311,7 +1314,7 @@ ui <- dashboardPage(
       )
     
   ) # dashboard body
-  ) # final de ui
+) # final de ui
 #-------------------------------------
 
 
@@ -1485,6 +1488,36 @@ server <- function(input, output) {
     
     plot_14_dias(estado = input$estado, nivel = "uf")
     
+  })
+  
+  # ui_filtro_quadradinhos_uf
+  
+  output$ui_filtro_quadradinhos_uf <- renderUI({
+    
+    aux_var <- rlang::sym(select_choices2[which(input$typevar == select_choices)])
+    
+    aux <- covid %>%
+      filter(state == input$estado) %>%
+      filter(place_type == "city") %>%
+      filter(is_last) %>%
+      arrange(desc(!!aux_var))
+    
+    box(
+      width = 12,
+      selectInput(
+        "filtro_quadradinhos_uf",
+        label = "Selecione os municípios de interesse(por default estão os 15 de maior quantidade da variável escolhida)",
+        choices = aux$city,
+        selected = aux$city[1:15],
+        multiple = T
+      ),
+      plotlyOutput("plot_quadradinhos_uf", height = 650L)
+    )
+    
+  })
+  
+  output$plot_quadradinhos_uf <- renderPlotly({
+    plot_quadradinhos(filtro = input$filtro_quadradinhos_uf, tipo = "uf", input = input$typevar, estado = input$estado)
   })
   
   #-------------------------------------
