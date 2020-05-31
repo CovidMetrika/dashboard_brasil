@@ -1061,6 +1061,10 @@ ui <- dashboardPage(
     tabItems(
       tabItem("dashbr", 
               
+              # incluindo o script do google analytics para acompanhamento de dados
+              
+              tags$head(includeHTML(("google_analytics.html"))),
+              
               fluidRow(
                 #-------------------------------------
                 # as três 'caixas' com informações resumo: 
