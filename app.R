@@ -25,6 +25,7 @@ library(shinyEffects)
 library(scales)
 library(lubridate)
 library(ggthemes)
+library(shinyalert)
 ################
 
 # dando source pra rodar código de extração dos dados assim, quando for fazer
@@ -1065,6 +1066,10 @@ ui <- dashboardPage(
               
               tags$head(includeHTML(("google_analytics.html"))),
               
+              # para a mensagem de popup
+              
+              useShinyalert(),
+              
               fluidRow(
                 #-------------------------------------
                 # as três 'caixas' com informações resumo: 
@@ -1324,6 +1329,9 @@ ui <- dashboardPage(
 
 #-------------------------------------
 server <- function(input, output) {
+  
+  shinyalert("Olá", "Caso você esteja acessando o dashboard pelo celular, sugerimos que o coloque na posição horizontal para uma melhor visualização dos gráficos!", type = "info")
+  
   #-------------------------------------
   #-------------------------------------
   
