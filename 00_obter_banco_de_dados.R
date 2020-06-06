@@ -54,7 +54,7 @@ df_obitos$date <- as.Date(df_obitos$date, format = "%Y-%m-%d")
 df_casos <- NULL
 
 cont <- 1 
-path <- paste0('https://brasil.io/api/dataset/covid19/caso/data?page=', cont)
+path <- paste0('https://brasil.io/api/dataset/covid19/caso_full/data?page=', cont)
 request <- GET(url = path)
 
 while (request$status_code != 404) {
@@ -63,7 +63,7 @@ while (request$status_code != 404) {
   df_casos <- rbind(df_casos, df[["results"]])
   
   cont <- cont + 1 
-  path <- paste0('https://brasil.io/api/dataset/covid19/caso/data?page=', cont)
+  path <- paste0('https://brasil.io/api/dataset/covid19/caso_full/data?page=', cont)
   request <- GET(url = path)
 }
 

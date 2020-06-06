@@ -84,7 +84,7 @@ covid <- readRDS(here::here("dados",'casos_covid19_br_mun.rds'))
 banco_14_dias <- covid %>%
   filter(place_type == "state") %>%
   group_by(state) %>%
-  mutate(data_inicial = min(date[deaths >= 10])) %>%
+  mutate(data_inicial = min(date[last_available_deaths >= 10])) %>%
   ungroup()
 
 banco_14_dias <- as.data.frame(banco_14_dias)
@@ -93,10 +93,10 @@ aux <- list()
 
 for (i in unique(banco_14_dias$state)) {
   for (j in unique(banco_14_dias[banco_14_dias$state == i, "data_inicial"]):max(banco_14_dias[banco_14_dias$state == i,"date"])) {
-    aux[[i]][[as.character(as_date(j))]] <- tibble(confirmados_14_dias = banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "confirmed"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "confirmed"],
-                                                   obitos_14_dias = banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "deaths"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "deaths"],
-                                                   confirmados_100k_hab_14_dias = (banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "confirmed"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "confirmed"])*100000/banco_14_dias[banco_14_dias$state == i,"estimated_population_2019"][1],
-                                                   obitos_100k_hab_14_dias = (banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "deaths"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "deaths"])*100000/banco_14_dias[banco_14_dias$state == i,"estimated_population_2019"][1],
+    aux[[i]][[as.character(as_date(j))]] <- tibble(confirmados_14_dias = banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "last_available_confirmed"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "last_available_confirmed"],
+                                                   obitos_14_dias = banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "last_available_deaths"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "last_available_deaths"],
+                                                   confirmados_100k_hab_14_dias = (banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "last_available_confirmed"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "last_available_confirmed"])*100000/banco_14_dias[banco_14_dias$state == i,"estimated_population_2019"][1],
+                                                   obitos_100k_hab_14_dias = (banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "last_available_deaths"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "last_available_deaths"])*100000/banco_14_dias[banco_14_dias$state == i,"estimated_population_2019"][1],
                                                    state = i,
                                                    date = as_date(j))
   }
@@ -113,14 +113,14 @@ aux2 <- read_excel("dados/estados_siglas.xlsx") %>%
 
 banco_14_dias <- left_join(banco_14_dias,aux, by = c("state","date")) %>%
   left_join(aux2, by = c("state" = "id")) %>%
-  filter(deaths > 10)
+  filter(last_available_deaths > 10)
 
 rm(aux)
 
 # banco de dados por estado:
 data_state <- covid %>%
-  select(state, confirmed, deaths, confirmed_per_100k_inhabitants, 
-         death_rate, is_last, place_type, estimated_population_2019) %>%
+  select(state, last_available_confirmed, last_available_deaths, last_available_confirmed_per_100k_inhabitants, 
+         last_available_death_rate, is_last, place_type, estimated_population_2019) %>%
   filter(is_last == 'TRUE' & place_type == 'state')
 
 # banco de dados obitos cartorio:
@@ -144,23 +144,23 @@ names(obitos_cartorio) <- c("Estado","Data","Acumulado mortes COVID-19","Acumula
 pop_br = sum(data_state$estimated_population_2019)
 
 ultima_atualizacao <- covid %>%
-  select(state, confirmed, deaths, date, place_type, is_last) %>%
+  select(state, last_available_confirmed, last_available_deaths, date, place_type, is_last) %>%
   filter(place_type == "state") %>%
   group_by(is_last) %>%
   filter(is_last) %>%
-  summarise(confirmed = sum(confirmed), deaths = sum(deaths), conf_per100k = sum(confirmed)/pop_br*100000,
-            letal = sum(deaths)/sum(confirmed)) %>%
+  summarise(last_available_confirmed = sum(last_available_confirmed), last_available_deaths = sum(last_available_deaths), conf_per100k = sum(last_available_confirmed)/pop_br*100000,
+            letal = sum(last_available_deaths)/sum(last_available_confirmed)) %>%
   select(-is_last)
 
 casos_br <- covid %>%
-  select(state, confirmed, deaths, date, place_type, is_last) %>%
+  select(state, last_available_confirmed, last_available_deaths, date, place_type, is_last) %>%
   filter(place_type == "state") %>%
   group_by(date) %>%
-  summarise(confirmed = sum(confirmed), deaths = sum(deaths), conf_per100k = sum(confirmed)/pop_br*100000,
-            letal = sum(deaths)/sum(confirmed)) %>%
+  summarise(last_available_confirmed = sum(last_available_confirmed), last_available_deaths = sum(last_available_deaths), conf_per100k = sum(last_available_confirmed)/pop_br*100000,
+            letal = sum(last_available_deaths)/sum(last_available_confirmed)) %>%
   arrange(date)
 
-casos_br[nrow(casos_br),c("confirmed","deaths","conf_per100k","letal")] <- ultima_atualizacao  
+casos_br[nrow(casos_br),c("last_available_confirmed","last_available_deaths","conf_per100k","letal")] <- ultima_atualizacao  
 
 casos_br <- as.data.frame(casos_br[,c(2:5,1)])
 
@@ -168,7 +168,7 @@ casos_br <- as.data.frame(casos_br[,c(2:5,1)])
 
 fcolor <- c("#dd4b39", "#605ca8", "#f39c12", "#d81b60")
 select_choices <- c("Casos Confirmados", "Óbitos", "Casos/100k hab.", "Letalidade")
-select_choices2 <- c("confirmed","deaths","confirmed_per_100k_inhabitants","death_rate")
+select_choices2 <- c("last_available_confirmed","last_available_deaths","last_available_confirmed_per_100k_inhabitants","last_available_death_rate")
 
 obts <- readRDS(here::here("dados",'obitos_br_uf.rds'))
 
@@ -244,7 +244,7 @@ plot_geral <- function(input){
 plot_mapa <- function(input){
   
   dataset <- data_state %>%
-    select(confirmed, deaths, confirmed_per_100k_inhabitants, death_rate, state) %>%
+    select(last_available_confirmed, last_available_deaths, last_available_confirmed_per_100k_inhabitants, last_available_death_rate, state) %>%
     mutate(id = state) 
   
   dataset <- dataset %>%
@@ -399,12 +399,12 @@ plot_bar <- function(input){
 week_geral <- function(input) {
   
   ultima_atualizacao <- covid %>%
-    select(state, confirmed, deaths, date, place_type, is_last) %>%
+    select(state, last_available_confirmed, last_available_deaths, date, place_type, is_last) %>%
     filter(place_type == "state") %>%
     group_by(is_last) %>%
     filter(is_last) %>%
-    summarise(confirmed = sum(confirmed), deaths = sum(deaths), confirmed_per_100k_inhabitants = sum(confirmed)/pop_br*100000,
-              death_rate = sum(deaths)/sum(confirmed))
+    summarise(last_available_confirmed = sum(last_available_confirmed), last_available_deaths = sum(last_available_deaths), last_available_confirmed_per_100k_inhabitants = sum(last_available_confirmed)/pop_br*100000,
+              last_available_death_rate = sum(last_available_deaths)/sum(last_available_confirmed))
   
   aux_var <- select_choices2[which(input == select_choices)]
   
@@ -423,8 +423,8 @@ week_geral <- function(input) {
   
   aux <- aux %>%
     group_by(date) %>%
-    summarise(confirmed = sum(confirmed), deaths = sum(deaths), confirmed_per_100k_inhabitants = sum(confirmed)/pop_br*100000,
-              death_rate = sum(deaths)/sum(confirmed)) %>%
+    summarise(last_available_confirmed = sum(last_available_confirmed), last_available_deaths = sum(last_available_deaths), last_available_confirmed_per_100k_inhabitants = sum(last_available_confirmed)/pop_br*100000,
+              last_available_death_rate = sum(last_available_deaths)/sum(last_available_confirmed)) %>%
     left_join(temp2, by = "date") %>%
     group_by(epidemiological_week_2020) %>%
     filter(date == max(date)) %>%
@@ -432,10 +432,10 @@ week_geral <- function(input) {
   
   aux <- as.data.frame(aux)
   
-  aux[nrow(aux),c("confirmed","deaths","confirmed_per_100k_inhabitants","death_rate")] <- c(ultima_atualizacao$confirmed,
-                                                                                            ultima_atualizacao$deaths,
-                                                                                            ultima_atualizacao$confirmed_per_100k_inhabitants,
-                                                                                            ultima_atualizacao$death_rate)
+  aux[nrow(aux),c("last_available_confirmed","last_available_deaths","last_available_confirmed_per_100k_inhabitants","last_available_death_rate")] <- c(ultima_atualizacao$last_available_confirmed,
+                                                                                            ultima_atualizacao$last_available_deaths,
+                                                                                            ultima_atualizacao$last_available_confirmed_per_100k_inhabitants,
+                                                                                            ultima_atualizacao$last_available_death_rate)
   
   ordem <- as.character(aux$epidemiological_week_2020)
   
@@ -472,7 +472,7 @@ week_geral <- function(input) {
       theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
             panel.grid.major = element_blank())
     
-    if(aux_var == "death_rate") {
+    if(aux_var == "last_available_death_rate") {
       p <- p +
         scale_y_continuous(labels=percent)
     }
@@ -504,13 +504,13 @@ plot_mapa_uf <- function(estado,input) {
   
   y_quantidade <- replace_na(y_quantidade, 0) 
   
-  if (aux_var == "confirmed") {
+  if (aux_var == "last_available_confirmed") {
     paleta <- "Reds"
     arredonda <- 0
-  } else if (aux_var == "deaths") {
+  } else if (aux_var == "last_available_deaths") {
     paleta <- "Purples"
     arredonda <- 0
-  } else if (aux_var == "confirmed_per_100k_inhabitants") {
+  } else if (aux_var == "last_available_confirmed_per_100k_inhabitants") {
     paleta <- "Oranges"
     arredonda <- 2
   } else {
@@ -522,7 +522,7 @@ plot_mapa_uf <- function(estado,input) {
   
   intervalos <- classInt::classIntervals(var = y_quantidade, n = 7, style = "fisher")
   
-  if(aux_var!="death_rate") {
+  if(aux_var!="last_available_death_rate") {
     intervalos[["brks"]][[2]] <- 1
     
     pal <- colorBin(palette=paleta, domain = y_quantidade, bins = intervalos[["brks"]])
@@ -598,20 +598,20 @@ tabela_uf <- function(estado, input) {
     select(city,!!var) %>%
     arrange(desc(!!var))
   
-  if(aux_var == "death_rate") {
+  if(aux_var == "last_available_death_rate") {
     aux <- aux %>%
       filter(!is.na(!!var))
-    aux$death_rate <- paste0(100*round(aux$death_rate,4),"%")
+    aux$last_available_death_rate <- paste0(100*round(aux$last_available_death_rate,4),"%")
   }
   
   texto <- ifelse(
-    test = aux_var == "confirmed",
+    test = aux_var == "last_available_confirmed",
     yes = "Confirmados",
     no = ifelse(
-      test = aux_var == "deaths",
+      test = aux_var == "last_available_deaths",
       yes = "Óbitos",
       no = ifelse(
-        test = aux_var == "confirmed_per_100k_inhabitants",
+        test = aux_var == "last_available_confirmed_per_100k_inhabitants",
         yes = "Confirmados/100mil hab.",
         no = "Letalidade"
       )
@@ -632,7 +632,7 @@ tabela_uf <- function(estado, input) {
     formatStyle("city",color = "#787878", fontSize = "14px", backgroundColor = "#f0f0f0") %>%
     formatStyle(aux_var, color = fcolor[which(input==select_choices)], fontWeight = "bold",fontSize = "14px", backgroundColor = "#f0f0f0")
   
-  if(aux_var == "confirmed_per_100k_inhabitants") {
+  if(aux_var == "last_available_confirmed_per_100k_inhabitants") {
     tabela <- formatRound(tabela, aux_var, digits = 2)
   }
   
@@ -690,7 +690,7 @@ plot_serie_uf <- function(estado, input, tipo) {
         theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
               panel.grid.major = element_blank())
       
-      if(aux_var == "death_rate") {
+      if(aux_var == "last_available_death_rate") {
         p <- p +
           scale_y_continuous(labels=percent)
       }
@@ -747,7 +747,7 @@ plot_serie_uf <- function(estado, input, tipo) {
         theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
               panel.grid.major = element_blank())
       
-      if(aux_var == "death_rate") {
+      if(aux_var == "last_available_death_rate") {
         p <- p +
           scale_y_continuous(labels=percent)
       }
@@ -782,7 +782,7 @@ plot_cart <- function(input) {
     pivot_longer(
       cols = -c(!!var),
       names_to = "disease_type",
-      values_to = "deaths"
+      values_to = "last_available_deaths"
     ) %>%
     filter(!str_detect(disease_type,"^Acumulado")) %>%
     filter(disease_type %in% valores)
@@ -797,8 +797,8 @@ plot_cart <- function(input) {
     aux$Data <- as.character(stringr::str_sub(aux$Data, 6, 10))
     
     p1 <- ggplot(aux) +
-      geom_line(aes(x = !!var, y = deaths, color = disease_type, group = 1), linetype = 'dotted') +
-      geom_point(aes(x = !!var, y = deaths, color = disease_type)) + 
+      geom_line(aes(x = !!var, y = last_available_deaths, color = disease_type, group = 1), linetype = 'dotted') +
+      geom_point(aes(x = !!var, y = last_available_deaths, color = disease_type)) + 
       scale_color_manual(name = "Doenças", values = paleta) +
       labs(x = text, y = text2) + 
       theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
@@ -814,8 +814,8 @@ plot_cart <- function(input) {
   } else {
     
     p1 <- ggplot(aux) +
-      geom_line(aes(x = !!var, y = deaths, color = disease_type, group = 1), linetype = 'dotted') +
-      geom_point(aes(x = !!var, y = deaths, color = disease_type)) + 
+      geom_line(aes(x = !!var, y = last_available_deaths, color = disease_type, group = 1), linetype = 'dotted') +
+      geom_point(aes(x = !!var, y = last_available_deaths, color = disease_type)) + 
       scale_color_manual(name = "Doenças", values = paleta) +
       labs(x = text, y = text2) + 
       theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
@@ -855,7 +855,7 @@ obitos_separados <- function(input, escolha){
     pivot_longer(
       cols = -c(!!var),
       names_to = "disease_type",
-      values_to = "deaths"
+      values_to = "last_available_deaths"
     ) %>%
     filter(!str_detect(disease_type,"^Acumulado")) %>%
     filter(disease_type %in% valores)
@@ -886,8 +886,8 @@ obitos_separados <- function(input, escolha){
     aux$Data <- as.character(stringr::str_sub(aux$Data, 6, 10))
     
     p1 <- ggplot(aux) +
-      geom_line(aes(x = !!var, y = deaths, color = disease_type, group = 1), linetype = 'dotted') +
-      geom_point(aes(x = !!var, y = deaths, color = disease_type)) + 
+      geom_line(aes(x = !!var, y = last_available_deaths, color = disease_type, group = 1), linetype = 'dotted') +
+      geom_point(aes(x = !!var, y = last_available_deaths, color = disease_type)) + 
       scale_color_manual(name = "Doenças", values = paleta) +
       labs(x = text, y = text2) + 
       theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
@@ -905,8 +905,8 @@ obitos_separados <- function(input, escolha){
   } else {
     
     p1 <- ggplot(aux) +
-      geom_line(aes(x = !!var, y = deaths, color = disease_type, group = 1), linetype = 'dotted') +
-      geom_point(aes(x = !!var, y = deaths, color = disease_type)) + 
+      geom_line(aes(x = !!var, y = last_available_deaths, color = disease_type, group = 1), linetype = 'dotted') +
+      geom_point(aes(x = !!var, y = last_available_deaths, color = disease_type)) + 
       scale_color_manual(name = "Doenças", values = paleta) +
       labs(x = text, y = text2) + 
       theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
@@ -980,11 +980,11 @@ plot_quadradinhos <- function(filtro, input, tipo, estado = NA) {
   
   var_2 <- rlang::sym(aux_var_2)
   
-  if (aux_var == "confirmed") {
+  if (aux_var == "last_available_confirmed") {
     paleta <- "Reds"
-  } else if (aux_var == "deaths") {
+  } else if (aux_var == "last_available_deaths") {
     paleta <- "Purples"
-  } else if (aux_var == "confirmed_per_100k_inhabitants") {
+  } else if (aux_var == "last_available_confirmed_per_100k_inhabitants") {
     paleta <- "Oranges"
   } else {
     paleta <- "PuRd"
@@ -1340,13 +1340,13 @@ server <- function(input, output) {
   # 'output' das caixas de informações principais: 
   
   output$casosBox <- renderValueBox({
-    valueBox(casos_br[nrow(casos_br),"confirmed"], "Casos", icon = icon("ambulance"),
+    valueBox(casos_br[nrow(casos_br),"last_available_confirmed"], "Casos", icon = icon("ambulance"),
              color = "red"
     )
   })
   
   output$obitosBox <- renderValueBox({
-    valueBox(casos_br[nrow(casos_br),"deaths"], "Óbitos", icon = icon("skull"),
+    valueBox(casos_br[nrow(casos_br),"last_available_deaths"], "Óbitos", icon = icon("skull"),
              color = "purple"
     )
   })
@@ -1422,7 +1422,7 @@ server <- function(input, output) {
       filter(is_last) %>%
       filter(place_type == "state")
     
-    valueBox(aux$confirmed, "Casos", icon = icon("ambulance"),
+    valueBox(aux$last_available_confirmed, "Casos", icon = icon("ambulance"),
              color = "red"
     )
   })
@@ -1433,7 +1433,7 @@ server <- function(input, output) {
       filter(is_last) %>%
       filter(place_type == "state")
     
-    valueBox(aux$deaths, "Óbitos", icon = icon("skull"),
+    valueBox(aux$last_available_deaths, "Óbitos", icon = icon("skull"),
              color = "purple"
     )
   })
@@ -1444,7 +1444,7 @@ server <- function(input, output) {
       filter(is_last) %>%
       filter(place_type == "state")
     
-    valueBox(round(aux$confirmed_per_100k_inhabitants,2), "Taxa /100k hab.", icon = icon("heartbeat"),
+    valueBox(round(aux$last_available_confirmed_per_100k_inhabitants,2), "Taxa /100k hab.", icon = icon("heartbeat"),
              color = "yellow"
     )
   })
@@ -1456,7 +1456,7 @@ server <- function(input, output) {
       filter(place_type == "state")
     
     valueBox(
-      paste0(round(aux$death_rate*100, 2), '%'), 
+      paste0(round(aux$last_available_death_rate*100, 2), '%'), 
       "Letalidade", icon = icon("exclamation-circle"),
       color = "maroon"
     )
