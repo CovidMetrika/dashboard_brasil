@@ -1251,6 +1251,14 @@ ui <- dashboardPage(
                   width = 6,
                   valueBoxOutput("git_covidMetrika", width = 12)
                 ),
+                column(
+                  width = 6,
+                  valueBoxOutput("dashboard_poa",width = 12)
+                ),
+                column(
+                  width = 6,
+                  valueBoxOutput("dashboard_rs", width = 12)
+                ),
                 
                 widgetUserBox(
                   title = tags$b("Franciele Lobo Pallaoro"),
@@ -1603,6 +1611,30 @@ server <- function(input, output) {
              color = "blue", 
              width = 12,
              href = "https://github.com/CovidMetrika/dashboard_brasil"
+    )
+    
+  })
+  
+  output$dashboard_poa <- renderValueBox({
+    
+    valueBox("Dashboard POA", 
+             subtitle = div("Confira aqui o nosso outro painel de dados com foco em Porto Alegre, informando os casos de COVID-19 e a situação dos leitos de UTI"), 
+             icon = icon("columns"), 
+             color = "blue", 
+             width = 12,
+             href = "https://mhbarbian.shinyapps.io/covid19_poa/"
+    )
+    
+  })
+  
+  output$dashboard_rs <- renderValueBox({
+    
+    valueBox("Dashboard Rio Grande do Sul", 
+             subtitle = div("Confira aqui o nosso outro painel de dados com foco no Rio Grande do Sul, informando os casos de COVID-19 e a situação dos leitos de UTI"), 
+             icon = icon("columns"), 
+             color = "blue", 
+             width = 12,
+             href = "https://mhbarbian.shinyapps.io/covid19_rs/"
     )
     
   })
