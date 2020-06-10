@@ -496,7 +496,8 @@ plot_mapa_uf <- function(estado,input) {
     select(city_ibge_code,!!var)
   
   dados_mapa <- dados_shp_uf_mun[[estado]] %>%
-    mutate(municipio = str_to_title(NM_MUNICIP)) %>%
+    mutate(municipio = str_to_title(NM_MUNICIP),
+           CD_GEOCMU = as.numeric(as.character(CD_GEOCMU))) %>%
     left_join(aux, by = c("CD_GEOCMU" = "city_ibge_code")) %>%
     mutate(var = !!var)
   
