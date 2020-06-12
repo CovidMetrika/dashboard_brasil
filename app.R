@@ -1001,17 +1001,18 @@ plot_quadradinhos <- function(filtro, input, tipo, estado = NA) {
   aux <- aux %>%
     filter(place_type == aux_var_2) %>%
     filter(!!var_2 %in% filtro) %>%
-    arrange(date)
+    arrange(desc(!!var))
   
   
   aux <- as.data.frame(aux)
   
-  p <- ggplot(aux, aes(x = date, y = !!var_2, fill = !!var)) +
+  p <- ggplot(aux, aes(x = date, y = reorder(!!var_2,!!var,FUN = max, na.rm = T), fill = !!var, label = !!var_2, text = paste(input,!!var))) +
     geom_tile() +
-    scale_fill_gradientn(name = select_choices[which(input == select_choices)],colours = brewer.pal(9,paleta)) +
+    labs(y = input) +
+    scale_fill_gradientn(trans = "sqrt", name = select_choices[which(input == select_choices)],colours = brewer.pal(9,paleta)) +
     theme_tufte(base_family="Helvetica")
   
-  ggplotly(p)
+  ggplotly(p, tooltip = c("x","label","text"))
 }
 
 
