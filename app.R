@@ -25,6 +25,7 @@ library(scales)
 library(lubridate)
 library(ggthemes)
 library(shinyalert)
+library(shinyjs)
 ################
 
 # dando source pra rodar código de extração dos dados assim, quando for fazer
