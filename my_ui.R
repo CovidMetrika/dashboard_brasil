@@ -91,6 +91,10 @@ ui <- dashboardPage(
                 ), # coluna
                 column(
                   width = 12,
+                  uiOutput("ui_filtro_quadradinhos_br")
+                ),
+                column(
+                  width = 12,
                   box(
                     width = 12,
                     selectInput(
@@ -102,12 +106,7 @@ ui <- dashboardPage(
                     ),
                     plotlyOutput("plot_14_dias_br", height = 650L)
                   )
-                ),
-                column(
-                  width = 12,
-                  uiOutput("ui_filtro_quadradinhos_br")
                 )
-                
                 
               ) #fluidrow
       ), # final da parte dos dados nacionais
@@ -155,11 +154,11 @@ ui <- dashboardPage(
                 ),
                 column(
                   width = 12,
+                  uiOutput("ui_filtro_quadradinhos_uf"),
                   box(
                     width = 12,
                     plotlyOutput("plot_14_dias_uf", height = 650L)
-                  ),
-                  uiOutput("ui_filtro_quadradinhos_uf")
+                  )
                 )
               )
               
