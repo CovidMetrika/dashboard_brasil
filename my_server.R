@@ -579,71 +579,69 @@ plot_serie_uf <- function(estado, input, tipo) {
 }
 
 # function plot óbitos do cartório
-plot_cart <- function(input) {
+plot_cart <- function(input,estado,causa) {
   
   if(input == "Diário") {
     var <- rlang::sym("Data")
-    text <- "Dia desde o primeiro óbito COVID-19"
+    text <- "Dia do ano"
     text2 <- "Número de óbitos diários"
   } else {
     var <- rlang::sym("Semana_epidemiologica_2020")
-    text <- "Semana epidemiológica desde o primeiro óbito COVID-19"
+    text <- "Semana epidemiológica de 2020"
     text2 <- "Número de óbitos por semana epidemiólogica"
   }
   
-  valores <- c("Mortes Pneumonia 2019","Mortes Pneumonia 2020","Mortes por falha respiratória 2019",
-               "Mortes por falha respiratória 2020","Mortes COVID-19")
-  
   aux <- obitos_cartorio %>%
-    group_by(!!var) %>%
-    summarise_at(names(obitos_cartorio)[c(3:17,20:34)],sum, na.rm = T) %>%
-    pivot_longer(
-      cols = -c(!!var),
-      names_to = "disease_type",
-      values_to = "last_available_deaths"
-    ) %>%
-    filter(!str_detect(disease_type,"^Acumulado")) %>%
-    filter(disease_type %in% valores)
+    filter(Estado %in% estado) %>%
+    group_by(disease_type,!!var) %>%
+    summarise(frequencia = sum(frequencia_mortes), acumulado = sum(acumulado_mortes)) %>%
+    filter(disease_type %in% causa)
+  
+  p <- ggplot(aux) +
+    geom_line(aes(x = !!var, y = frequencia, label = acumulado, color = disease_type, group = 1), linetype = "dotted") +
+    geom_point(aes(x = !!var, y = frequencia, label = acumulado, color = disease_type)) +
+    labs(x = text, y = text2, color = "Causa do óbito")
+  
+  ggplotly(p)
   
   
+  #paleta <- RColorBrewer::brewer.pal("Paired", n = 5)
+  #names(paleta) <- valores
   
-  paleta <- RColorBrewer::brewer.pal("Paired", n = 5)
-  names(paleta) <- valores
-  
-  if(input == "Diário") {
-    
-    aux$Data <- as.character(stringr::str_sub(aux$Data, 6, 10))
-    
-    p1 <- ggplot(aux) +
-      geom_line(aes(x = !!var, y = last_available_deaths, color = disease_type, group = 1), linetype = 'dotted') +
-      geom_point(aes(x = !!var, y = last_available_deaths, color = disease_type)) + 
-      scale_color_manual(name = "Doenças", values = paleta) +
-      labs(x = text, y = text2) + 
-      theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
-      theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
-            panel.grid.major = element_blank()) +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1))
-    
-    ggplotly(p1) %>%
-      layout(xaxis = list(tickmode = 'array', 
-                          tickvals = 1:length(unique(aux$Data)), 
-                          ticktext = unique(aux$Data)))
-    
-  } else {
-    
-    p1 <- ggplot(aux) +
-      geom_line(aes(x = !!var, y = last_available_deaths, color = disease_type, group = 1), linetype = 'dotted') +
-      geom_point(aes(x = !!var, y = last_available_deaths, color = disease_type)) + 
-      scale_color_manual(name = "Doenças", values = paleta) +
-      labs(x = text, y = text2) + 
-      theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
-      theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
-            panel.grid.major = element_blank()) +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1))
-    
-    ggplotly(p1) %>%
-      style(textposition = "middleright") 
-  }
+  # if(input == "Diário") {
+  # 
+  #   aux$Data <- as.character(stringr::str_sub(aux$Data, 6, 10))
+  #   
+  #   p1 <- ggplot(aux) +
+  #     geom_line(aes(x = !!var, y = last_available_deaths, color = disease_type, group = 1), linetype = 'dotted') +
+  #     geom_point(aes(x = !!var, y = last_available_deaths, color = disease_type)) + 
+  #     scale_color_manual(name = "Doenças", values = paleta) +
+  #     labs(x = text, y = text2) + 
+  #     theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
+  #     theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+  #     panel.grid.major = element_blank()) +
+  #     theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  #   
+  #   ggplotly(p1) %>%
+  #     layout(xaxis = list(tickmode = 'array', 
+  #     tickvals = 1:length(unique(aux$Data)), 
+  #     ticktext = unique(aux$Data)))
+  # 
+  # } else {
+  # 
+  #   p1 <- ggplot(aux) +
+  #     geom_line(aes(x = !!var, y = last_available_deaths, color = disease_type, group = 1), linetype = 'dotted') +
+  #     geom_point(aes(x = !!var, y = last_available_deaths, color = disease_type)) + 
+  #     scale_color_manual(name = "Doenças", values = paleta) +
+  #     labs(x = text, y = text2) + 
+  #     theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
+  #     theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+  #     panel.grid.major = element_blank()) +
+  #     theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  #   
+  #   ggplotly(p1) %>%
+  #     style(textposition = "middleright") 
+  # }
   
 }
 
@@ -835,6 +833,12 @@ plot_quadradinhos <- function(filtro, input, tipo, estado = NA) {
 
 #-------------------------------------
 server <- function(input, output) {
+  
+  # Minimizador de filtros
+  
+  observeEvent(!input$sidebar_toggle, {
+    shinyjs::toggle(id = "Sidebar")
+  })
   
   shinyalert("Olá", "Caso você esteja acessando o dashboard pelo celular, sugerimos que o coloque na posição horizontal para uma melhor visualização dos gráficos!", type = "info")
   
@@ -1075,13 +1079,13 @@ server <- function(input, output) {
   # gráfico com óbitos por dia
   
   output$cart_dia_plot <- renderPlotly({
-    plot_cart(input$tab_cart)
+    plot_cart(input$tab_cart,input$estado_cart,input$tipo_morte_cart)
   })
   
   # gráfico com óbitos por semana epidemiologica
   
   output$cart_sem_plot <- renderPlotly({
-    plot_cart(input$tab_cart)
+    plot_cart(input$tab_cart,input$estado_cart,input$tipo_morte_cart)
   })
   #-------------------------------------
   #-------------------------------------

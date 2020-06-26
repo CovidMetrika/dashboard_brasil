@@ -51,6 +51,10 @@ ui <- dashboardPage(
               
               tags$head(includeHTML(("google_analytics.html"))),
               
+              # funções extras
+              
+              useShinyjs(),
+              
               # para a mensagem de popup
               
               useShinyalert(),
@@ -172,10 +176,37 @@ ui <- dashboardPage(
               tags$style(".small-box.bg-olive { background-color: #33A02C !important; color: #FFFFFF !important; }"),
               tags$style(".small-box.bg-lime { background-color: #FB9A99 !important; color: #FFFFFF !important; }"),
               
+              
+              
               fluidRow(
-                valueBoxOutput("box_pneumonia", width = 4),
-                valueBoxOutput("box_falha", width = 4),
-                valueBoxOutput("box_covid", width = 4),
+                
+                column(
+                  width = 12,
+                  actionButton("sidebar_toggle", "Mostre/Minimize os filtros")
+                ),
+                div(
+                  id = "Sidebar",
+                  sidebarPanel(
+                    h3("Filtros"),
+                    selectizeInput("estado_cart",
+                                   label = "Digite os estados para os gráficos",
+                                   choices = unique(obitos_cartorio$Estado),
+                                   multiple = T,
+                                   options = list(maxItems = 35, placeholder = 'Escolha os estados'),
+                                   selected = unique(obitos_cartorio$Estado)),
+                    selectizeInput("tipo_morte_cart",
+                                   label = "Digite as causas de óbito de interesse para os gráficos",
+                                   choices = unique(obitos_cartorio$disease_type),
+                                   multiple = T,
+                                   options = list(maxItems = 20, placeholder = 'Escolha as causas'),
+                                   selected = c("COVID-19",unique(obitos_cartorio$disease_type)[str_detect(unique(obitos_cartorio$disease_type),"20$")])),
+                    width = 12
+                  )
+                ),
+                
+                # valueBoxOutput("box_pneumonia", width = 4),
+                # valueBoxOutput("box_falha", width = 4),
+                # valueBoxOutput("box_covid", width = 4),
                 #   h6(em(data_hora_atual)),
                 column(
                   width = 12,

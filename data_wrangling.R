@@ -160,16 +160,71 @@ data_state <- covid %>%
 # banco de dados obitos cartorio:
 
 obitos_cartorio <- df_obitos %>%
-  filter(date >= "2020-03-16" & date <= Sys.Date()) # filtrando a partir do primeiro caso
+  filter(date <= Sys.Date()) # filtrando a partir do primeiro caso
 
 names(obitos_cartorio) <- c("Estado","Data","Semana_epidemiologica_2020","Acumulado mortes total 2019","Acumulado mortes total 2020","Acumulado mortes COVID-19",
                             "Mortes total 2020","Acumulado mortes indeterminadas 2019","Acumulado mortes indeterminadas 2020",
                             "Acumulado mortes outras 2019","Acumulado mortes outras 2020","Acumulado mortes Pneumonia 2019","Acumulado mortes Pneumonia 2020",
-                            "Acumulado mortes por falha respiratória 2019","Acumulado mortes por falha respiratória 2020",
-                            "Acumulado mortes sars 2019","Acumulado mortes sars 2020","Acumulado mortes septicemia 2019","Acumulado mortes septicemia 2020",
-                            "Mortes COVID-19","Mortes indeterminadas 2020","Mortes outras 2020","Mortes Pneumonia 2020","Mortes por falha respiratória 2020",
-                            "Mortes sars 2020","Mortes septicemia 2020")
+                            "Acumulado mortes por insuficiência respiratória 2019","Acumulado mortes por insuficiência respiratória 2020",
+                            "Acumulado mortes srag 2019","Acumulado mortes srag 2020","Acumulado mortes septicemia 2019","Acumulado mortes septicemia 2020",
+                            "Mortes COVID-19","Mortes indeterminadas 2020","Mortes outras 2020","Mortes Pneumonia 2020","Mortes por insuficiência respiratória 2020",
+                            "Mortes srag 2020","Mortes septicemia 2020")
 
+
+obitos_cartorio <- obitos_cartorio %>%
+  select(c(Estado:Semana_epidemiologica_2020,starts_with("Acumulado"))) %>%
+  select(-c("Acumulado mortes total 2019","Acumulado mortes total 2020")) %>%
+  group_by(Data,Semana_epidemiologica_2020) %>%
+  pivot_longer(
+    cols = -c(Estado,Semana_epidemiologica_2020,Data),
+    names_to = "disease_type",
+    values_to = "acumulado_mortes"
+  ) %>%
+  mutate(ano = ifelse(disease_type != "Acumulado mortes COVID-19", str_extract(disease_type,"....$"), "2020"))
+
+data_minima <- obitos_cartorio %>%
+  group_by(Estado,disease_type) %>%
+  filter(!is.na(acumulado_mortes)) %>%
+  summarise(data_minima = min(Data, na.rm = T)) %>%
+  ungroup() %>%
+  add_row(Estado = "RR", disease_type = "Acumulado mortes indeterminadas 2019",data_minima = as_date("2020-12-31"))
+
+obitos_cartorio <- obitos_cartorio %>%
+  as.data.frame()
+
+obitos_cartorio$frequencia_mortes <- obitos_cartorio$acumulado_mortes
+
+  
+for(i in unique(obitos_cartorio$Estado)) {
+  for(j in unique(obitos_cartorio$disease_type)) {
+    indices <- which(obitos_cartorio$Estado==i&obitos_cartorio$disease_type==j)
+    for(k in indices) {
+      if(is.na(obitos_cartorio$frequencia_mortes[k])) {
+        if(obitos_cartorio$Data[k] < data_minima$data_minima[data_minima$Estado==i&data_minima$disease_type==j]) {
+          obitos_cartorio$frequencia_mortes[k] <- 0
+          obitos_cartorio$acumulado_mortes[k] <- 0
+        } else {
+          obitos_cartorio$frequencia_mortes[k] <- 0
+          obitos_cartorio$acumulado_mortes[k] <- obitos_cartorio$acumulado_mortes[indices[which(indices==k)-1]]
+        }
+      } else {
+        if(k == indices[1]) {
+          obitos_cartorio$frequencia_mortes[k] <- obitos_cartorio$acumulado_mortes[k]
+        } else {
+          obitos_cartorio$frequencia_mortes[k] <- obitos_cartorio$acumulado_mortes[k]-obitos_cartorio$acumulado_mortes[indices[which(indices==k)-1]]
+        }
+      }
+    }
+  }
+}
+
+# arrumando labels
+
+obitos_cartorio$disease_type <- as.character(factor(obitos_cartorio$disease_type,
+  levels = unique(obitos_cartorio$disease_type), 
+  labels = c("COVID-19","Indeterminada 2019","Indeterminada 2020","Demais Óbitos 2019","Demais Óbitos 2020","Pneumonia 2019",
+             "Pneumonia 2020","Insuficiência Respiratória 2019","Insuficiência Respiratória 2020","SRAG 2019","SRAG 2020",
+             "Septicemia 2019","Septicemia 2020")))
 
 # banco de dados com total de casos no brasil por dia 2.0
 # criei um novo para que não ficasse aqueles números negativos
