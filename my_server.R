@@ -591,11 +591,28 @@ plot_cart <- function(input,estado,causa) {
     text2 <- "Número de óbitos por semana epidemiólogica"
   }
   
-  aux <- obitos_cartorio %>%
-    filter(Estado %in% estado) %>%
-    group_by(disease_type,!!var) %>%
-    summarise(frequencia = sum(frequencia_mortes), acumulado = sum(acumulado_mortes)) %>%
-    filter(disease_type %in% causa)
+  if(input=="Diário") {
+    aux <- obitos_cartorio %>%
+      filter(Estado %in% estado) %>%
+      group_by(disease_type,!!var) %>%
+      summarise(frequencia = sum(frequencia_mortes), acumulado = sum(acumulado_mortes)) %>%
+      filter(disease_type %in% causa)
+  } else {
+    aux <- obitos_cartorio %>%
+      filter(Estado %in% estado) %>%
+      group_by(disease_type,!!var) %>%
+      summarise(frequencia = sum(frequencia_mortes)) %>%
+      filter(disease_type %in% causa)
+      
+    aux2 <- obitos_cartorio %>%
+      filter(Estado %in% estado) %>%
+      group_by(disease_type,!!var) %>%
+      filter(Data == max(Data)) %>%
+      summarise(acumulado = sum(acumulado_mortes))
+    
+    aux <- left_join(aux, aux2, by = c("Semana_epidemiologica_2020","disease_type"))
+  }
+  
   
   p <- ggplot(aux) +
     geom_line(aes(x = !!var, y = frequencia, label = acumulado, color = disease_type, group = 1), linetype = "dotted") +
