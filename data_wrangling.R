@@ -43,7 +43,7 @@ df_obitos$date <- as.Date(df_obitos$date, format = "%Y-%m-%d")
 
 df_casos <- NULL
 
-path <- "https://brasil.io/dataset/covid19/caso_full/?format=csv"
+path <- "https://data.brasil.io/dataset/covid19/caso_full.csv.gz"
 request <- try(GET(url = path))
 
 if(class(request) == "try-error") {
@@ -51,7 +51,7 @@ if(class(request) == "try-error") {
 } else if(request$status_code == 404) {
   df_casos <- read_csv("dados/brasil.io_reserva.csv")
 } else {
-  df_casos <- read_csv("https://brasil.io/dataset/covid19/caso_full/?format=csv")
+  df_casos <- read_csv("https://data.brasil.io/dataset/covid19/caso_full.csv.gz")
   write_csv(df_casos,"dados/brasil.io_reserva.csv")
 }
 
@@ -173,7 +173,6 @@ names(obitos_cartorio) <- c("Estado","Data","Semana_epidemiologica_2020","Acumul
 
 obitos_cartorio <- obitos_cartorio %>%
   select(c(Estado:Semana_epidemiologica_2020,starts_with("Acumulado"))) %>%
-  select(-c("Acumulado mortes total 2019","Acumulado mortes total 2020")) %>%
   group_by(Data,Semana_epidemiologica_2020) %>%
   pivot_longer(
     cols = -c(Estado,Semana_epidemiologica_2020,Data),
@@ -222,7 +221,7 @@ for(i in unique(obitos_cartorio$Estado)) {
 
 obitos_cartorio$disease_type <- as.character(factor(obitos_cartorio$disease_type,
   levels = unique(obitos_cartorio$disease_type), 
-  labels = c("COVID-19","Indeterminada 2019","Indeterminada 2020","Demais Óbitos 2019","Demais Óbitos 2020","Pneumonia 2019",
+  labels = c("Total Óbitos 2019","Total Óbitos 2020","COVID-19","Indeterminada 2019","Indeterminada 2020","Demais Óbitos 2019","Demais Óbitos 2020","Pneumonia 2019",
              "Pneumonia 2020","Insuficiência Respiratória 2019","Insuficiência Respiratória 2020","SRAG 2019","SRAG 2020",
              "Septicemia 2019","Septicemia 2020")))
 
@@ -273,4 +272,12 @@ rm(temp)
 
 estados_siglas <- read_excel("dados/estados_siglas.xlsx") %>%
   mutate(NM_ESTADO = str_to_title(Estado), id = as.factor(Sigla))
+
+
+# deixando somente os objetos de interesse
+
+#rm(list=setdiff(ls(),c("leitos_mapa_mun_rs","leitos_mapa_reg_rs","leitos_uti","dados_mapa_rs_reg",
+#                       "dados_mapa_rs","dados_covid_rs","pop_regiao","populacao_fee")))
+
+
 

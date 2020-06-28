@@ -198,7 +198,7 @@ ui <- dashboardPage(
                                    choices = unique(obitos_cartorio$disease_type),
                                    multiple = T,
                                    options = list(maxItems = 20, placeholder = 'Escolha as causas'),
-                                   selected = c("COVID-19",unique(obitos_cartorio$disease_type)[str_detect(unique(obitos_cartorio$disease_type),"20$")])),
+                                   selected = str_subset(c("COVID-19",unique(obitos_cartorio$disease_type)[str_detect(unique(obitos_cartorio$disease_type),"20$")]), "Total", negate = T)),
                     width = 12
                   )
                 ),
