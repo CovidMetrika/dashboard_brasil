@@ -7,7 +7,7 @@
 
 df_obitos <- NULL
 
-path <- "https://brasil.io/dataset/covid19/obito_cartorio/?format=csv"
+path <- "https://data.brasil.io/dataset/covid19/obito_cartorio.csv.gz"
 request <- try(GET(url = path))
 
 if(class(request) == "try-error") {
@@ -15,7 +15,7 @@ if(class(request) == "try-error") {
 } else if(request$status_code == 404){
   df_obitos <- read_csv("dados/obitos_cartorio_reserva.csv", guess_max = 10000)
 } else {
-  df_obitos <- read_csv("https://brasil.io/dataset/covid19/obito_cartorio/?format=csv", guess_max = 10000)
+  df_obitos <- read_csv(path, guess_max = 10000)
   write_csv(df_obitos,"dados/obitos_cartorio_reserva.csv")
 }
 
@@ -51,7 +51,7 @@ if(class(request) == "try-error") {
 } else if(request$status_code == 404) {
   df_casos <- read_csv("dados/brasil.io_reserva.csv")
 } else {
-  df_casos <- read_csv("https://data.brasil.io/dataset/covid19/caso_full.csv.gz")
+  df_casos <- read_csv(path)
   write_csv(df_casos,"dados/brasil.io_reserva.csv")
 }
 
@@ -162,68 +162,110 @@ data_state <- covid %>%
 obitos_cartorio <- df_obitos %>%
   filter(date <= Sys.Date()) # filtrando a partir do primeiro caso
 
-names(obitos_cartorio) <- c("Estado","Data","Semana_epidemiologica_2020","Acumulado mortes total 2019","Acumulado mortes total 2020","Acumulado mortes COVID-19",
-                            "Mortes total 2020","Acumulado mortes indeterminadas 2019","Acumulado mortes indeterminadas 2020",
-                            "Acumulado mortes outras 2019","Acumulado mortes outras 2020","Acumulado mortes Pneumonia 2019","Acumulado mortes Pneumonia 2020",
-                            "Acumulado mortes por insuficiência respiratória 2019","Acumulado mortes por insuficiência respiratória 2020",
-                            "Acumulado mortes srag 2019","Acumulado mortes srag 2020","Acumulado mortes septicemia 2019","Acumulado mortes septicemia 2020",
-                            "Mortes COVID-19","Mortes indeterminadas 2020","Mortes outras 2020","Mortes Pneumonia 2020","Mortes por insuficiência respiratória 2020",
-                            "Mortes srag 2020","Mortes septicemia 2020")
+names(obitos_cartorio) <- c("Estado","Data","Semana_epidemiologica_2019","Semana_epidemiologica_2020",
+                            "Mortes srag 2019","Mortes Pneumonia 2019","Mortes por insuficiência respiratória 2019",
+                            "Mortes septicemia 2019","Mortes indeterminadas 2019","Mortes outras 2019",
+                            "Mortes srag 2020","Mortes Pneumonia 2020","Mortes por insuficiência respiratória 2020",
+                            "Mortes septicemia 2020","Mortes indeterminadas 2020","Mortes outras 2020",
+                            "Mortes COVID-19","Acumulado mortes srag 2019","Acumulado mortes Pneumonia 2019",
+                            "Acumulado mortes por insuficiência respiratória 2019","Acumulado mortes septicemia 2019",
+                            "Acumulado mortes indeterminadas 2019","Acumulado mortes outras 2019",
+                            "Acumulado mortes srag 2020","Acumulado mortes Pneumonia 2020",
+                            "Acumulado mortes por insuficiência respiratória 2020","Acumulado mortes septicemia 2020",
+                            "Acumulado mortes indeterminadas 2020","Acumulado mortes outras 2020",
+                            "Acumulado mortes COVID-19","Mortes total 2019","Mortes total 2020",
+                            "Acumulado mortes total 2019","Acumulado mortes total 2020")
 
 
-obitos_cartorio <- obitos_cartorio %>%
+# Manipulações para quando só se tinha o número de casos acumulado e precisava se criar o 
+# aumento diária/semanal
+
+# agora não precisa mais por isso ta comentado
+
+# obitos_cartorio <- obitos_cartorio %>%
+#   select(c(Estado:Semana_epidemiologica_2020,starts_with("Acumulado"))) %>%
+#   group_by(Data,Semana_epidemiologica_2020) %>%
+#   pivot_longer(
+#     cols = -c(Estado,Semana_epidemiologica_2020,Data),
+#     names_to = "disease_type",
+#     values_to = "acumulado_mortes"
+#   ) %>%
+#   mutate(ano = ifelse(disease_type != "Acumulado mortes COVID-19", str_extract(disease_type,"....$"), "2020"))
+# 
+# data_minima <- obitos_cartorio %>%
+#   group_by(Estado,disease_type) %>%
+#   filter(!is.na(acumulado_mortes)) %>%
+#   summarise(data_minima = min(Data, na.rm = T)) %>%
+#   ungroup() %>%
+#   add_row(Estado = "RR", disease_type = "Acumulado mortes indeterminadas 2019",data_minima = as_date("2020-12-31"))
+# 
+# obitos_cartorio <- obitos_cartorio %>%
+#   as.data.frame()
+# 
+# obitos_cartorio$frequencia_mortes <- obitos_cartorio$acumulado_mortes
+# 
+#   
+# for(i in unique(obitos_cartorio$Estado)) {
+#   for(j in unique(obitos_cartorio$disease_type)) {
+#     indices <- which(obitos_cartorio$Estado==i&obitos_cartorio$disease_type==j)
+#     for(k in indices) {
+#       if(is.na(obitos_cartorio$frequencia_mortes[k])) {
+#         if(obitos_cartorio$Data[k] < data_minima$data_minima[data_minima$Estado==i&data_minima$disease_type==j]) {
+#           obitos_cartorio$frequencia_mortes[k] <- 0
+#           obitos_cartorio$acumulado_mortes[k] <- 0
+#         } else {
+#           obitos_cartorio$frequencia_mortes[k] <- 0
+#           obitos_cartorio$acumulado_mortes[k] <- obitos_cartorio$acumulado_mortes[indices[which(indices==k)-1]]
+#         }
+#       } else {
+#         if(k == indices[1]) {
+#           obitos_cartorio$frequencia_mortes[k] <- obitos_cartorio$acumulado_mortes[k]
+#         } else {
+#           obitos_cartorio$frequencia_mortes[k] <- obitos_cartorio$acumulado_mortes[k]-obitos_cartorio$acumulado_mortes[indices[which(indices==k)-1]]
+#         }
+#       }
+#     }
+#   }
+# }
+
+# manipulação
+
+acumulado <- obitos_cartorio %>%
   select(c(Estado:Semana_epidemiologica_2020,starts_with("Acumulado"))) %>%
   group_by(Data,Semana_epidemiologica_2020) %>%
   pivot_longer(
-    cols = -c(Estado,Semana_epidemiologica_2020,Data),
+    cols = -c(Estado,Semana_epidemiologica_2020,Semana_epidemiologica_2019,Data),
     names_to = "disease_type",
     values_to = "acumulado_mortes"
   ) %>%
   mutate(ano = ifelse(disease_type != "Acumulado mortes COVID-19", str_extract(disease_type,"....$"), "2020"))
 
-data_minima <- obitos_cartorio %>%
-  group_by(Estado,disease_type) %>%
-  filter(!is.na(acumulado_mortes)) %>%
-  summarise(data_minima = min(Data, na.rm = T)) %>%
+
+frequencia <- obitos_cartorio %>%
+  select(c(Estado:Semana_epidemiologica_2020,starts_with("Mortes"))) %>%
+  group_by(Data,Semana_epidemiologica_2020) %>%
+  pivot_longer(
+    cols = -c(Estado,Semana_epidemiologica_2020,Semana_epidemiologica_2019,Data),
+    names_to = "disease_type",
+    values_to = "frequencia_mortes"
+  ) %>%
   ungroup() %>%
-  add_row(Estado = "RR", disease_type = "Acumulado mortes indeterminadas 2019",data_minima = as_date("2020-12-31"))
+  mutate(disease_type = str_c("Acumulado m",str_remove(disease_type,"^."))) %>%
+  select(c("Estado","Data","disease_type","frequencia_mortes"))
 
-obitos_cartorio <- obitos_cartorio %>%
-  as.data.frame()
-
-obitos_cartorio$frequencia_mortes <- obitos_cartorio$acumulado_mortes
-
-  
-for(i in unique(obitos_cartorio$Estado)) {
-  for(j in unique(obitos_cartorio$disease_type)) {
-    indices <- which(obitos_cartorio$Estado==i&obitos_cartorio$disease_type==j)
-    for(k in indices) {
-      if(is.na(obitos_cartorio$frequencia_mortes[k])) {
-        if(obitos_cartorio$Data[k] < data_minima$data_minima[data_minima$Estado==i&data_minima$disease_type==j]) {
-          obitos_cartorio$frequencia_mortes[k] <- 0
-          obitos_cartorio$acumulado_mortes[k] <- 0
-        } else {
-          obitos_cartorio$frequencia_mortes[k] <- 0
-          obitos_cartorio$acumulado_mortes[k] <- obitos_cartorio$acumulado_mortes[indices[which(indices==k)-1]]
-        }
-      } else {
-        if(k == indices[1]) {
-          obitos_cartorio$frequencia_mortes[k] <- obitos_cartorio$acumulado_mortes[k]
-        } else {
-          obitos_cartorio$frequencia_mortes[k] <- obitos_cartorio$acumulado_mortes[k]-obitos_cartorio$acumulado_mortes[indices[which(indices==k)-1]]
-        }
-      }
-    }
-  }
-}
+obitos_cartorio <- left_join(acumulado, frequencia, by = c("Estado","Data","disease_type")) %>%
+  mutate(frequencia = replace_na(frequencia_mortes,0)) %>%
+  group_by(Estado,disease_type) %>%
+  mutate(acumulado = cumsum(frequencia)) %>%
+  select(-c(frequencia_mortes,acumulado_mortes))
 
 # arrumando labels
 
 obitos_cartorio$disease_type <- as.character(factor(obitos_cartorio$disease_type,
   levels = unique(obitos_cartorio$disease_type), 
-  labels = c("Total Óbitos 2019","Total Óbitos 2020","COVID-19","Indeterminada 2019","Indeterminada 2020","Demais Óbitos 2019","Demais Óbitos 2020","Pneumonia 2019",
-             "Pneumonia 2020","Insuficiência Respiratória 2019","Insuficiência Respiratória 2020","SRAG 2019","SRAG 2020",
-             "Septicemia 2019","Septicemia 2020")))
+  labels = c("SRAG 2019","Pneumonia 2019","Insuficiência Respiratória 2019","Septicemia 2019","Indeterminada 2019","Demais Óbitos 2019",
+             "SRAG 2020","Pneumonia 2020","Insuficiência Respiratória 2020","Septicemia 2020","Indeterminada 2020","Demais Óbitos 2020",
+             "COVID-19","Total Óbitos 2019","Total Óbitos 2020")))
 
 # banco de dados com total de casos no brasil por dia 2.0
 # criei um novo para que não ficasse aqueles números negativos

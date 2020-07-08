@@ -595,31 +595,41 @@ plot_cart <- function(input,estado,causa) {
     aux <- obitos_cartorio %>%
       filter(Estado %in% estado) %>%
       group_by(disease_type,!!var) %>%
-      summarise(frequencia = sum(frequencia_mortes), acumulado = sum(acumulado_mortes)) %>%
+      summarise(frequencia = sum(frequencia), acumulado = sum(acumulado)) %>%
       filter(disease_type %in% causa)
   } else {
     aux <- obitos_cartorio %>%
       filter(Estado %in% estado) %>%
       group_by(disease_type,!!var) %>%
-      summarise(frequencia = sum(frequencia_mortes)) %>%
+      summarise(frequencia = sum(frequencia)) %>%
       filter(disease_type %in% causa)
       
     aux2 <- obitos_cartorio %>%
       filter(Estado %in% estado) %>%
       group_by(disease_type,!!var) %>%
       filter(Data == max(Data)) %>%
-      summarise(acumulado = sum(acumulado_mortes))
+      summarise(acumulado = sum(acumulado))
     
     aux <- left_join(aux, aux2, by = c("Semana_epidemiologica_2020","disease_type"))
   }
-  
   
   p <- ggplot(aux) +
     geom_line(aes(x = !!var, y = frequencia, label = acumulado, color = disease_type, group = 1), linetype = "dotted") +
     geom_point(aes(x = !!var, y = frequencia, label = acumulado, color = disease_type)) +
     labs(x = text, y = text2, color = "Causa do óbito")
   
-  ggplotly(p)
+  ggplotly(p) %>%
+    layout(annotations = list(
+      list(x = 0.001, y = 0.99, 
+      text = "Os cartórios podem demorar algumas semanas para consolidar os dados e, portanto,
+      os dados dos 14 últimos dias (pelo menos) são incompletos e serão atualizados no futuro. 
+      Caso queira ter certeza de que está trabalhando com números finais (ou quase finais), 
+      utilize dados anteriores a 30 dias da data de atualização desse banco", 
+           showarrow = F, xref='paper', yref='paper', 
+           xanchor='left', yanchor='auto', xshift=0, yshift=0,
+           font=list(size=10, color="gray"))
+    )
+    )
   
   
   #paleta <- RColorBrewer::brewer.pal("Paired", n = 5)
@@ -867,19 +877,19 @@ server <- function(input, output) {
   # 'output' das caixas de informações principais: 
   
   output$casosBox <- renderValueBox({
-    valueBox(casos_br[nrow(casos_br),"last_available_confirmed"], "Casos", icon = icon("ambulance"),
+    valueBox(format(casos_br[nrow(casos_br),"last_available_confirmed"], big.mark = "."), "Casos", icon = icon("ambulance"),
              color = "red"
     )
   })
   
   output$obitosBox <- renderValueBox({
-    valueBox(casos_br[nrow(casos_br),"last_available_deaths"], "Óbitos", icon = icon("skull"),
+    valueBox(format(casos_br[nrow(casos_br),"last_available_deaths"],big.mark = "."), "Óbitos", icon = icon("skull"),
              color = "purple"
     )
   })
   
   output$taxaBox <- renderValueBox({
-    valueBox(round(casos_br[nrow(casos_br),"conf_per100k"],2), "Casos /100 mil hab.", icon = icon("heartbeat"),
+    valueBox(format(round(casos_br[nrow(casos_br),"conf_per100k"],2),big.mark = "."), "Casos /100 mil hab.", icon = icon("heartbeat"),
              color = "yellow"
     )
   })
