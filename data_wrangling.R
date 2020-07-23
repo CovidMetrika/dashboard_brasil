@@ -160,21 +160,21 @@ data_state <- covid %>%
 # banco de dados obitos cartorio:
 
 obitos_cartorio <- df_obitos %>%
-  filter(date <= Sys.Date()) # filtrando a partir do primeiro caso
+  filter(date <= Sys.Date()) # filtrando a partir do primeiro caso 
+  
+obitos_cartorio <- obitos_cartorio[,order(colnames(obitos_cartorio))] # reordenando pela ordem alfabética 
+# para ser mais faccil de renomear as variáveis logo abaixo
 
-names(obitos_cartorio) <- c("Estado","Data","Semana_epidemiologica_2019","Semana_epidemiologica_2020",
-                            "Mortes srag 2019","Mortes Pneumonia 2019","Mortes por insuficiência respiratória 2019",
-                            "Mortes septicemia 2019","Mortes indeterminadas 2019","Mortes outras 2019",
-                            "Mortes srag 2020","Mortes Pneumonia 2020","Mortes por insuficiência respiratória 2020",
-                            "Mortes septicemia 2020","Mortes indeterminadas 2020","Mortes outras 2020",
-                            "Mortes COVID-19","Acumulado mortes srag 2019","Acumulado mortes Pneumonia 2019",
-                            "Acumulado mortes por insuficiência respiratória 2019","Acumulado mortes septicemia 2019",
-                            "Acumulado mortes indeterminadas 2019","Acumulado mortes outras 2019",
-                            "Acumulado mortes srag 2020","Acumulado mortes Pneumonia 2020",
-                            "Acumulado mortes por insuficiência respiratória 2020","Acumulado mortes septicemia 2020",
-                            "Acumulado mortes indeterminadas 2020","Acumulado mortes outras 2020",
-                            "Acumulado mortes COVID-19","Mortes total 2019","Mortes total 2020",
-                            "Acumulado mortes total 2019","Acumulado mortes total 2020")
+names(obitos_cartorio) <- c("Data","Acumulado mortes COVID-19","Acumulado mortes indeterminadas 2019",
+                            "Acumulado mortes indeterminadas 2020","Acumulado mortes outras 2019","Acumulado mortes outras 2020",
+                            "Acumulado mortes Pneumonia 2019","Acumulado mortes Pneumonia 2020","Acumulado mortes por insuficiência respiratória 2019",
+                            "Acumulado mortes por insuficiência respiratória 2020","Acumulado mortes srag 2019","Acumulado mortes srag 2020",
+                            "Acumulado mortes septicemia 2019","Acumulado mortes septicemia 2020","Acumulado mortes total 2019","Acumulado mortes total 2020",
+                            "Semana_epidemiologica_2019","Semana_epidemiologica_2020","Mortes COVID-19","Mortes indeterminadas 2019",
+                            "Mortes indeterminadas 2020","Mortes outras 2019","Mortes outras 2020","Mortes Pneumonia 2019","Mortes Pneumonia 2020",
+                            "Mortes por insuficiência respiratória 2019","Mortes por insuficiência respiratória 2020",
+                            "Mortes srag 2019","Mortes srag 2020","Mortes septicemia 2019","Mortes septicemia 2020",
+                            "Mortes total 2019","Mortes total 2020","Estado")
 
 
 # Manipulações para quando só se tinha o número de casos acumulado e precisava se criar o 
@@ -231,7 +231,7 @@ names(obitos_cartorio) <- c("Estado","Data","Semana_epidemiologica_2019","Semana
 # manipulação
 
 acumulado <- obitos_cartorio %>%
-  select(c(Estado:Semana_epidemiologica_2020,starts_with("Acumulado"))) %>%
+  select(c(Estado,Semana_epidemiologica_2020,Semana_epidemiologica_2019,Data,starts_with("Acumulado"))) %>%
   group_by(Data,Semana_epidemiologica_2020) %>%
   pivot_longer(
     cols = -c(Estado,Semana_epidemiologica_2020,Semana_epidemiologica_2019,Data),
@@ -242,7 +242,7 @@ acumulado <- obitos_cartorio %>%
 
 
 frequencia <- obitos_cartorio %>%
-  select(c(Estado:Semana_epidemiologica_2020,starts_with("Mortes"))) %>%
+  select(c(Estado,Semana_epidemiologica_2020,Semana_epidemiologica_2019,Data,starts_with("Mortes"))) %>%
   group_by(Data,Semana_epidemiologica_2020) %>%
   pivot_longer(
     cols = -c(Estado,Semana_epidemiologica_2020,Semana_epidemiologica_2019,Data),
@@ -263,9 +263,9 @@ obitos_cartorio <- left_join(acumulado, frequencia, by = c("Estado","Data","dise
 
 obitos_cartorio$disease_type <- as.character(factor(obitos_cartorio$disease_type,
   levels = unique(obitos_cartorio$disease_type), 
-  labels = c("SRAG 2019","Pneumonia 2019","Insuficiência Respiratória 2019","Septicemia 2019","Indeterminada 2019","Demais Óbitos 2019",
-             "SRAG 2020","Pneumonia 2020","Insuficiência Respiratória 2020","Septicemia 2020","Indeterminada 2020","Demais Óbitos 2020",
-             "COVID-19","Total Óbitos 2019","Total Óbitos 2020")))
+  labels = c("COVID-19","Indeterminada 2019","Indeterminada 2020","Demais Óbitos 2019","Demais Óbitos 2020",
+             "Pneumonia 2019","Pneumonia 2020","Insuficiência Respiratória 2019","Insuficiência Respiratória 2020","SRAG 2019","SRAG 2020",
+             "Septicemia 2019","Septicemia 2020","Total Óbitos 2019","Total Óbitos 2020")))
 
 # banco de dados com total de casos no brasil por dia 2.0
 # criei um novo para que não ficasse aqueles números negativos
