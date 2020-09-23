@@ -7,7 +7,7 @@
 plot_geral <- function(input){
   
   temp <- as.data.frame(casos_br[,c(which(input == select_choices), 5)]) # dado selecionado no input
-  temp <- data.frame(Data = as.character(stringr::str_sub(temp$date, 6, 10)), 
+  temp <- data.frame(Data = temp$date, 
                      Frequencia = round(temp[,1], 3))
   
   col_sel <- fcolor[which(input == select_choices)]
@@ -24,17 +24,18 @@ plot_geral <- function(input){
       geom_line(aes(x = Data, y = Frequencia, group = 1), color = col_sel, linetype = 'dotted') +
       geom_point(aes(x = Data, y = Frequencia), color = col_sel) + 
       geom_bar(aes(x = Data, y = Diario), fill = col_sel, stat = 'identity') + 
-      theme(axis.text.x = element_text(angle = 45, size = 8, vjust = 0.5)) + 
+      scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+      # theme(axis.text.x = element_text(angle = 45, size = 8, vjust = 0.5)) + 
       labs(x = NULL, y = name_aux) + 
       scale_y_continuous(labels = scales::comma) +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      # theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
       theme(plot.background = element_rect(fill = "transparent", color = NA)) 
     
     
-    ggplotly(p) %>%
-      layout(xaxis = list(tickmode = 'array', 
-                          tickvals = 1:nrow(temp), 
-                          ticktext = unique(temp$Data))) 
+    ggplotly(p) #%>%
+    #   layout(xaxis = list(tickmode = 'array', 
+    #                       tickvals = 1:nrow(temp), 
+    #                       ticktext = unique(temp$Data))) 
     
   } else {
     
@@ -474,7 +475,7 @@ plot_serie_uf <- function(estado, input, tipo) {
   
   if(tipo == "Diário") {
     
-    ordem <- as.character(format(aux$date, "%d-%m"))
+    # ordem <- as.character(format(aux$date, "%d-%m"))
     
     if(aux_var %in% select_choices2[c(1,2)]) {
       
@@ -483,15 +484,15 @@ plot_serie_uf <- function(estado, input, tipo) {
         aux$novos[i] <- aux[i,aux_var]-aux[i-1,aux_var]
       }
       
-      aux$date <- as.character(format(aux$date, "%d-%m"))
+      # aux$date <- as.character(format(aux$date, "%d-%m"))
       
       p <- ggplot(aux) +
         geom_line(aes(x = date, y = !!var, group = 1), color = col_sel, linetype = 'dotted') +
         geom_point(aes(x = date, y = !!var), color = col_sel) + 
         geom_col(aes(x = date, y = novos), fill = col_sel) +
-        scale_x_discrete(limits = ordem) +
+        scale_x_date(date_breaks = "1 month", date_labels = "%b") +
         labs(x = "Dia", y = input) +
-        theme(axis.text.x = element_text(angle=45,size=8, vjust = 0.5)) +
+        # theme(axis.text.x = element_text(angle=45,size=8, vjust = 0.5)) +
         theme(plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
               panel.grid.major = element_blank())
       
@@ -615,7 +616,7 @@ plot_cart <- function(input,estado,causa) {
   
   p <- ggplot(aux) +
     geom_line(aes(x = !!var, y = frequencia, label = acumulado, color = disease_type, group = 1), linetype = "dotted") +
-    geom_point(aes(x = !!var, y = frequencia, label = acumulado, color = disease_type)) +
+    #geom_point(aes(x = !!var, y = frequencia, label = acumulado, color = disease_type)) +
     labs(x = text, y = text2, color = "Causa do óbito")
   
   ggplotly(p) %>%
