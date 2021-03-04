@@ -243,7 +243,9 @@ week_geral <- function(input) {
     group_by(date) %>%
     summarise(last_available_confirmed = sum(last_available_confirmed), last_available_deaths = sum(last_available_deaths), last_available_confirmed_per_100k_inhabitants = sum(last_available_confirmed)/pop_br*100000,
               last_available_death_rate = sum(last_available_deaths)/sum(last_available_confirmed)) %>%
-    left_join(temp2, by = "date") %>%
+    left_join(semana_20_21, by = c("date" = "dia")) %>%
+    mutate(epidemiological_week_2020 = semana_epidemiologica) %>%
+    select(-semana_epidemiologica) %>%
     group_by(epidemiological_week_2020) %>%
     filter(date == max(date)) %>%
     ungroup()
@@ -525,7 +527,9 @@ plot_serie_uf <- function(estado, input, tipo) {
       filter(date %in% aux$date) %>%
       unique()
     
-    aux <- left_join(aux,temp2, by = "date") %>%
+    aux <- left_join(aux,semana_20_21, by = c("date" = "dia")) %>%
+      mutate(epidemiological_week_2020 = semana_epidemiologica) %>%
+      select(-semana_epidemiologica) %>%
       group_by(epidemiological_week_2020) %>%
       filter(date == max(date)) %>%
       ungroup()

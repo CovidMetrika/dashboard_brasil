@@ -299,6 +299,8 @@ fcolor <- c("#dd4b39", "#605ca8", "#f39c12", "#d81b60")
 select_choices <- c("Casos Confirmados", "Óbitos", "Casos/100k hab.", "Letalidade")
 select_choices2 <- c("last_available_confirmed","last_available_deaths","last_available_confirmed_per_100k_inhabitants","last_available_death_rate")
 
+semana_20_21 <- read_csv("dados/semana_20_21.csv")
+
 obts <- df_obitos
 
 temp <- obts %>%
@@ -307,8 +309,9 @@ temp <- obts %>%
 temp <- merge(casos_br, temp, by = 'date')
 temp <- unique(temp)
 
-casos_br <- casos_br %>%
-  mutate(ep_week = temp$epidemiological_week_2020)
+casos_br <- left_join(casos_br, semana_20_21, by = c("date" = "dia")) %>%
+  mutate(ep_week = semana_epidemiologica) %>%
+  select(-semana_epidemiologica)
 
 rm(temp)
 
