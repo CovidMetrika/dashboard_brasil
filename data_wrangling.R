@@ -119,20 +119,31 @@ banco_14_dias <- covid %>%
   filter(place_type == "state") %>%
   group_by(state) %>%
   mutate(data_inicial = min(date[last_available_deaths >= 10])) %>%
-  ungroup()
+  group_by(state) %>%
+  filter(last_available_date >= data_inicial) %>%
+  ungroup() %>%
+  group_by(state, epidemiological_week) %>%
+  summarise(last_available_confirmed = last(last_available_confirmed),
+            last_available_deaths = last(last_available_deaths),
+            estimated_population_2019 = last(estimated_population_2019))
 
 banco_14_dias <- as.data.frame(banco_14_dias)
 
 aux <- list()
 
 for (i in unique(banco_14_dias$state)) {
-  for (j in unique(banco_14_dias[banco_14_dias$state == i, "data_inicial"]):max(banco_14_dias[banco_14_dias$state == i,"date"])) {
-    aux[[i]][[as.character(as_date(j))]] <- tibble(confirmados_14_dias = banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "last_available_confirmed"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "last_available_confirmed"],
-                                                   obitos_14_dias = banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "last_available_deaths"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "last_available_deaths"],
-                                                   confirmados_100k_hab_14_dias = (banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "last_available_confirmed"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "last_available_confirmed"])*100000/banco_14_dias[banco_14_dias$state == i,"estimated_population_2019"][1],
-                                                   obitos_100k_hab_14_dias = (banco_14_dias[banco_14_dias$date == j & banco_14_dias$state == i, "last_available_deaths"] - banco_14_dias[banco_14_dias$date == j-14 & banco_14_dias$state == i, "last_available_deaths"])*100000/banco_14_dias[banco_14_dias$state == i,"estimated_population_2019"][1],
+  for (j in (min(banco_14_dias[banco_14_dias$state == i, "epidemiological_week"])+2):max(banco_14_dias[banco_14_dias$state == i,"epidemiological_week"])) {
+    if(j %in% c(202101,202102)) {
+      j_menos <- j-49
+    } else {
+      j_menos <- j-2
+    }
+    aux[[i]][[as.numeric(j)]] <- tibble(confirmados_14_dias = banco_14_dias[banco_14_dias$epidemiological_week == j & banco_14_dias$state == i, "last_available_confirmed"] - banco_14_dias[banco_14_dias$epidemiological_week == j_menos & banco_14_dias$state == i, "last_available_confirmed"],
+                                                   obitos_14_dias = banco_14_dias[banco_14_dias$epidemiological_week == j & banco_14_dias$state == i, "last_available_deaths"] - banco_14_dias[banco_14_dias$epidemiological_week == j_menos & banco_14_dias$state == i, "last_available_deaths"],
+                                                   confirmados_100k_hab_14_dias = (banco_14_dias[banco_14_dias$epidemiological_week == j & banco_14_dias$state == i, "last_available_confirmed"] - banco_14_dias[banco_14_dias$epidemiological_week == j_menos & banco_14_dias$state == i, "last_available_confirmed"])*100000/banco_14_dias[banco_14_dias$state == i,"estimated_population_2019"][1],
+                                                   obitos_100k_hab_14_dias = (banco_14_dias[banco_14_dias$epidemiological_week == j & banco_14_dias$state == i, "last_available_deaths"] - banco_14_dias[banco_14_dias$epidemiological_week == j_menos & banco_14_dias$state == i, "last_available_deaths"])*100000/banco_14_dias[banco_14_dias$state == i,"estimated_population_2019"][1],
                                                    state = i,
-                                                   date = as_date(j))
+                                                   epidemiological_week = as.numeric(j))
   }
 }
 
@@ -145,9 +156,9 @@ aux2 <- read_excel("dados/estados_siglas.xlsx") %>%
   arrange(Codigo) %>%
   select(id,Regiao)
 
-banco_14_dias <- left_join(banco_14_dias,aux, by = c("state","date")) %>%
+banco_14_dias <- left_join(banco_14_dias,aux, by = c("state","epidemiological_week")) %>%
   left_join(aux2, by = c("state" = "id")) %>%
-  filter(last_available_deaths > 10)
+  filter(!is.na(obitos_14_dias))
 
 rm(aux)
 

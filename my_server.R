@@ -786,7 +786,7 @@ plot_14_dias <- function(estado, nivel) {
   }
   
   p1 <- ggplot(aux) +
-    geom_point(aes(x = obitos_100k_hab_14_dias, y = confirmados_100k_hab_14_dias, col = state, label = date)) +
+    geom_point(aes(x = obitos_100k_hab_14_dias, y = confirmados_100k_hab_14_dias, col = state, label = epidemiological_week)) +
     geom_path(aes(x = obitos_100k_hab_14_dias, y = confirmados_100k_hab_14_dias, col = state, group = state)) +
     geom_abline(slope = 10, size = .3) +
     geom_abline(slope = 100, size = .3) +
@@ -800,7 +800,7 @@ plot_14_dias <- function(estado, nivel) {
   anotacoes <- list(
     x = c(diff(x_range)*11/12+x_range[1],diff(x_range)*1/15+x_range[1]-(1/100*diff(x_range)),1),
     y = c((diff(x_range)*11/12+x_range[1])*10-(1/100*diff(y_range)),(diff(x_range)*1/15+x_range[1])*100+(1/100*diff(y_range)),0.005),
-    text = c("Letalidade 10%","Letalidade 1%","Dias consecutivos desde o marco de 10 óbitos são conectados pelas linhas"),
+    text = c("Letalidade 10%","Letalidade 1%","Semanas consecutivos desde o marco de 10 óbitos são conectados pelas linhas"),
     textangle = c(-(atan(10 * (x_to_y+0.006)) * 180/pi),-atan(100 * (x_to_y+0.006)) * 180/pi,0),
     xref = c("x","x","paper"),
     yref = c("y","y","paper"),
