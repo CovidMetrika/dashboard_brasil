@@ -275,67 +275,85 @@ ui <- dashboardPage(
                   valueBoxOutput("dashboard_rs", width = 12)
                 ),
                 
-                widgetUserBox(
-                  title = tags$b("Franciele Lobo Pallaoro"),
-                  subtitle = "Estudante de Estatística da UFRGS",
-                  type = 2,
+                userBox(
+                  title = userDescription(
+                    title = tags$b("Franciele Lobo Pallaoro"),
+                    subtitle = "Estudante de Estatística da UFRGS",
+                    type = 2,
+                    image = 'https://github.com/franpallaoro/COVID-19/blob/ssjuliana/Dashboard/fotos/franciele.jpg?raw=true'
+                  ),
                   width = 4,
-                  src = "franciele.jpg",
-                  color = "teal",
-                  footer = "Contato: franpallaoro@gmail.com"
+                  status = "teal",
+                  "Contato: franpallaoro@gmail.com",
+                  footer_padding = F
                 ),
                 
-                widgetUserBox(
-                  title = tags$b("Gabriel Holmer Saul"),
-                  subtitle = "Estudante de Estatística da UFRGS",
-                  type = 2,
+                userBox(
+                  title = userDescription(
+                    title = tags$b("Gabriel Holmer Saul"),
+                    subtitle = "Estudante de Estatística da UFRGS",
+                    type = 2,
+                    image = 'https://github.com/franpallaoro/COVID-19/blob/ssjuliana/Dashboard/fotos/gabriel.jpg?raw=true'
+                  ),
                   width = 4,
-                  src = "gabriel.jpg",
-                  color = "teal",
-                  footer = "Contato: gabrielholmersaul@gmail.com"
+                  status = "teal",
+                  "Contato: gabrielholmersaul@gmail.com",
+                  footer_padding = F
                 )
                 ,
                 
-                widgetUserBox(
-                  title = tags$b("Gustavo Machado Utpott"),
-                  subtitle = "Estudante de Estatística da UFRGS",
-                  type = 2,
+                userBox(
+                  title = userDescription(
+                    title = tags$b("Gustavo Machado Utpott"),
+                    subtitle = "Estudante de Estatística da UFRGS",
+                    type = 2,
+                    image = 'https://github.com/franpallaoro/COVID-19/blob/ssjuliana/Dashboard/fotos/gustavo.png?raw=true',
+                  ),
                   width = 4,
-                  src = "gustavo.png",
-                  color = "teal",
-                  footer = "Contato: gustavo.utpott@gmail.com"
+                  status = "teal",
+                  "Contato: gustavo.utpott@gmail.com",
+                  footer_padding = F
                 ),
                 
-                widgetUserBox(
-                  title = tags$b("Juliana Sena de Souza"),
-                  subtitle = "Estudante de Pós-Graduação em Epidemiologia da UFRGS",
-                  type = 2,
+                userBox(
+                  title = userDescription(
+                    title = tags$b("Juliana Sena de Souza"),
+                    subtitle = "Estudante de Pós-Graduação em Epidemiologia da UFRGS",
+                    type = 2,
+                    image =  'https://github.com/franpallaoro/COVID-19/blob/ssjuliana/Dashboard/fotos/juliana.jpeg?raw=true',
+                  ),
                   width = 4,
-                  src =  "juliana.jpeg",
-                  color = "teal",
-                  footer = "Contato: julianass.estatistica@gmail.com"
+                  status = "teal",
+                  "Contato: julianass.estatistica@gmail.com",
+                  footer_padding = F
                 ),
                 
                 
-                widgetUserBox(
-                  title = tags$b("Márcia Helena Barbian"),
-                  subtitle = "Professora do departamento de Estatística da UFRGS",
-                  type = 2,
+                userBox(
+                  title = userDescription(
+                    title = tags$b("Márcia Helena Barbian"),
+                    subtitle = "Professora do Departamento de Estatística da UFRGS",
+                    type = 2,
+                    image = 'https://github.com/franpallaoro/COVID-19/blob/ssjuliana/Dashboard/fotos/marcia.png?raw=true',
+                  ),
                   width = 4,
-                  src = "marcia.png",
-                  color = "teal",
-                  footer =  "Contato: mhbarbian@ufrgs.com"
+                  status = "teal",
+                  "Contato: mhbarbian@ufrgs.br", 
+                  footer_padding = F
                 ), 
                 
-                widgetUserBox(
-                  title = tags$b("Rodrigo Citton P. dos Reis"),
-                  subtitle = "Professor do departamento de Estatística da UFRGS",
-                  type = 2,
+                userBox(
+                  title = userDescription(
+                    title = tags$b("Rodrigo Citton P. dos Reis"),
+                    subtitle = "Professor do Departamento de Estatística da UFRGS",
+                    type = 2,
+                    image = 'https://github.com/franpallaoro/COVID-19/blob/ssjuliana/Dashboard/fotos/rodrigo.jpg?raw=true'
+                  ),
                   width = 4,
-                  src = "rodrigo.jpg",
-                  color = "teal",
-                  footer =  "Contato: citton.padilha@ufrgs.br"
-                ), 
+                  status = "teal",
+                  "Contato: citton.padilha@ufrgs.br",
+                  footer_padding = F
+                ),  
                 
                 tags$img(src = "logos.png", 
                          height = "150", width = "1000")
